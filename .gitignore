@@ -7,3 +7,5 @@ dev_ws/install/
 dev_ws/log/
 
 components/micro_ros_espidf_component/
+sdkconfig
+sdkconfig.old
