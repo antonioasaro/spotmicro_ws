@@ -441,8 +441,6 @@ extern "C" void app_main(void)
 	vTaskDelay(500 / portTICK_PERIOD_MS);
 
 #ifdef TEST_KINEMATICS
-// Total = 1 timer in map & publishers/subscribers in SpotMicroMotionCmd
-#define TOTAL_EXECUTORS 4
 	printf("Testing Kinematics!!\n");
 	xTaskCreate((TaskFunction_t)&ssd1306_text_task, "ssd1306_display_text", 2048,
 				(void *)"Kinematics!!!   ", 1, NULL);
@@ -479,7 +477,7 @@ extern "C" void app_main(void)
 	// Create executor
 	printf("Create spotmicro_executors\n");
 	rclc_executor_t executor;
-	RCCHECK(rclc_executor_init(&executor, &support.context, TOTAL_EXECUTORS, &allocator));
+	RCCHECK(rclc_executor_init(&executor, &support.context, 1+3, &allocator));
 	RCCHECK(rclc_executor_add_timer(&executor, &spotmicro_timer));
 
 	// Initialize spot micro kinematics object of this class
