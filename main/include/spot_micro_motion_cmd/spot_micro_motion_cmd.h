@@ -133,6 +133,10 @@ public:
   // Returns current state name
   std::string getCurrentStateName();
 
+#ifdef ANTONIO
+  void standCommandCallback(const std_msgs__msg__Bool *msg);
+#endif
+
 private:
   // Declare SpotMicroState a friend so it can access and modify private
   // members of this class
@@ -232,7 +236,7 @@ private:
 
 #ifdef ANTONIO
   // Callback method for stand command
-  void standCommandCallback(const std_msgs__msg__Bool &msg);
+  // void standCommandCallback(const std_msgs__msg__Bool *msg);
 
   // Callback method for idle command
   void idleCommandCallback(const std_msgs__msg__Bool &msg);

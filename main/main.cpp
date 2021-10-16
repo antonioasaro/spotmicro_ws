@@ -166,7 +166,7 @@ void timer_callback(rcl_timer_t *timer, int64_t last_call_time)
 		outgoing_button.stamp.nanosec = ts.tv_nsec;
 
 		// Reset the pong count and publish the button message
-		rcl_publish(&button_publisher, (const void *)&outgoing_button, NULL);
+		RCCHECK(rcl_publish(&button_publisher, (const void *)&outgoing_button, NULL));
 		////		printf("Button send seq %s\n", outgoing_button.frame_id.data);
 	}
 };
@@ -477,7 +477,7 @@ extern "C" void app_main(void)
 	// Create executor
 	printf("Create spotmicro_executors\n");
 	rclc_executor_t executor;
-	RCCHECK(rclc_executor_init(&executor, &support.context, 1+3, &allocator));
+	RCCHECK(rclc_executor_init(&executor, &support.context, 1 + 3, &allocator));
 	RCCHECK(rclc_executor_add_timer(&executor, &spotmicro_timer));
 
 	// Initialize spot micro kinematics object of this class

@@ -67,32 +67,40 @@ std_msgs__msg__Bool idle_cmd;
 std_msgs__msg__Bool stand_cmd;
 std_msgs__msg__Bool walk_cmd;
 geometry_msgs__msg__Twist cmd_vel_msg;
+#endif
 
+#ifdef ANTONIO
 void idle_cmd_subscription_callback(const void *msgin)
 {
 
   std_msgs__msg__Bool *msg = (std_msgs__msg__Bool *)msgin;
-  printf("Received keyboard idle\n");
+  printf("Received keyboard idle - %d\n", msg->data);
 }
+
 void stand_cmd_subscription_callback(const void *msgin)
 {
 
   std_msgs__msg__Bool *msg = (std_msgs__msg__Bool *)msgin;
-  printf("Received keyboard stand\n");
+  printf("Received keyboard stand - %d\n", msg->data);
+  //SpotMicroMotionCmd::standCommandCallback(msg);
 }
+
 void walk_cmd_subscription_callback(const void *msgin)
 {
 
   std_msgs__msg__Bool *msg = (std_msgs__msg__Bool *)msgin;
-  printf("Received keyboard walk\n");
+  printf("Received keyboard walk - %d\n", msg->data);
 }
+
 void cmd_vel_msg_subscription_callback(const void *msgin)
 {
 
   geometry_msgs__msg__Twist *msg = (geometry_msgs__msg__Twist *)msgin;
   printf("Received keyboard: x = %f y = %f z = %f\n", msg->linear.x, msg->linear.y, msg->linear.z);
 }
+#endif
 
+#ifdef ANTONIO
 SpotMicroMotionCmd::SpotMicroMotionCmd(rcl_node_t &nh, rclc_executor_t &executor)
 {
 #else
@@ -168,7 +176,7 @@ SpotMicroMotionCmd::SpotMicroMotionCmd(ros::NodeHandle &nh, ros::NodeHandle &pnh
   RCCHECK(rclc_subscription_init_default(&idle_cmd_subscriber, &nh, ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Bool), "/idle_cmd"));
   RCCHECK(rclc_subscription_init_default(&stand_cmd_subscriber, &nh, ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Bool), "/stand_cmd"));
   RCCHECK(rclc_subscription_init_default(&walk_cmd_subscriber, &nh, ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Bool), "/walk_cmd"));
-//  RCCHECK(rclc_subscription_init_default(&cmd_vel_msg_subscriber, &nh, ROSIDL_GET_MSG_TYPE_SUPPORT(geometry_msgs, msg, Twist), "/cmd_vel"));
+  //  RCCHECK(rclc_subscription_init_default(&cmd_vel_msg_subscriber, &nh, ROSIDL_GET_MSG_TYPE_SUPPORT(geometry_msgs, msg, Twist), "/cmd_vel"));
 
   RCCHECK(rclc_executor_add_subscription(&executor, &idle_cmd_subscriber, &idle_cmd, &idle_cmd_subscription_callback, ON_NEW_DATA));
   RCCHECK(rclc_executor_add_subscription(&executor, &stand_cmd_subscriber, &stand_cmd, &stand_cmd_subscription_callback, ON_NEW_DATA));
@@ -545,9 +553,9 @@ void SpotMicroMotionCmd::readInConfigParameters()
 
 void SpotMicroMotionCmd::standCommandCallback(
 #ifdef ANTONIO
-    const std_msgs__msg__Bool &msg)
+    const std_msgs__msg__Bool *msg)
 {
-  if (msg.data == true)
+  if (msg->data == true)
   {
     cmd_.stand_cmd_ = true;
   }
@@ -628,6 +636,8 @@ void SpotMicroMotionCmd::velCommandCallback(
   cmd_.yaw_rate_cmd_rps_ = msg->angular.z;
 #endif
 }
+
+
 
 void SpotMicroMotionCmd::resetEventCommands()
 {
