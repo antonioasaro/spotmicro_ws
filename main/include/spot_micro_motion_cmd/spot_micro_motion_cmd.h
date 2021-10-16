@@ -134,7 +134,24 @@ public:
   std::string getCurrentStateName();
 
 #ifdef ANTONIO
+  // Callback method for stand command
+  // void standCommandCallback(const std_msgs__msg__Bool *msg);
   void standCommandCallback(const std_msgs__msg__Bool *msg);
+
+  // Callback method for idle command
+  void idleCommandCallback(const std_msgs__msg__Bool *msg);
+
+  // Callback method for walk command
+  void walkCommandCallback(const std_msgs__msg__Bool *msg);
+
+  // Callback method for angle command
+  void angleCommandCallback(const geometry_msgs__msg__Vector3 *msg);
+
+  // Callback method for velocity command
+  // Currently, the only supported commands from this message are
+  // x and y axis linear velocity, and z axis angular rate
+  void velCommandCallback(const geometry_msgs__msg__Twist &msg);
+  //void standCommandCallback(const std_msgs__msg__Bool *msg);
 #endif
 
 private:
@@ -234,25 +251,9 @@ private:
   geometry_msgs::Vector3 lcd_angle_cmd_msg_;
 #endif
 
-#ifdef ANTONIO
+#ifndef ANTONIO
   // Callback method for stand command
   // void standCommandCallback(const std_msgs__msg__Bool *msg);
-
-  // Callback method for idle command
-  void idleCommandCallback(const std_msgs__msg__Bool &msg);
-
-  // Callback method for walk command
-  void walkCommandCallback(const std_msgs__msg__Bool &msg);
-
-  // Callback method for angle command
-  void angleCommandCallback(const geometry_msgs__msg__Vector3 &msg);
-
-  // Callback method for velocity command
-  // Currently, the only supported commands from this message are
-  // x and y axis linear velocity, and z axis angular rate
-  void velCommandCallback(const geometry_msgs__msg__Twist &msg);
-#else
-  // Callback method for stand command
   void standCommandCallback(const std_msgs::Bool::ConstPtr &msg);
 
   // Callback method for idle command

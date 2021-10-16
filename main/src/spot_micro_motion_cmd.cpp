@@ -39,7 +39,6 @@ using namespace geometry_msgs;
 #endif
 typedef std::vector<std::pair<std::string, std::string>> VectorStringPairs;
 
-// Constructor
 #ifdef ANTONIO
 #define RCCHECK(fn)                                                                \
   {                                                                                \
@@ -67,6 +66,7 @@ std_msgs__msg__Bool idle_cmd;
 std_msgs__msg__Bool stand_cmd;
 std_msgs__msg__Bool walk_cmd;
 geometry_msgs__msg__Twist cmd_vel_msg;
+extern SpotMicroMotionCmd *motion;
 #endif
 
 #ifdef ANTONIO
@@ -75,6 +75,7 @@ void idle_cmd_subscription_callback(const void *msgin)
 
   std_msgs__msg__Bool *msg = (std_msgs__msg__Bool *)msgin;
   printf("Received keyboard idle - %d\n", msg->data);
+  motion->idleCommandCallback(msg);
 }
 
 void stand_cmd_subscription_callback(const void *msgin)
@@ -82,7 +83,7 @@ void stand_cmd_subscription_callback(const void *msgin)
 
   std_msgs__msg__Bool *msg = (std_msgs__msg__Bool *)msgin;
   printf("Received keyboard stand - %d\n", msg->data);
-  //SpotMicroMotionCmd::standCommandCallback(msg);
+  motion->standCommandCallback(msg);
 }
 
 void walk_cmd_subscription_callback(const void *msgin)
@@ -90,6 +91,7 @@ void walk_cmd_subscription_callback(const void *msgin)
 
   std_msgs__msg__Bool *msg = (std_msgs__msg__Bool *)msgin;
   printf("Received keyboard walk - %d\n", msg->data);
+  motion->walkCommandCallback(msg);
 }
 
 void cmd_vel_msg_subscription_callback(const void *msgin)
@@ -100,6 +102,7 @@ void cmd_vel_msg_subscription_callback(const void *msgin)
 }
 #endif
 
+// Constructor
 #ifdef ANTONIO
 SpotMicroMotionCmd::SpotMicroMotionCmd(rcl_node_t &nh, rclc_executor_t &executor)
 {
@@ -554,64 +557,49 @@ void SpotMicroMotionCmd::readInConfigParameters()
 void SpotMicroMotionCmd::standCommandCallback(
 #ifdef ANTONIO
     const std_msgs__msg__Bool *msg)
-{
-  if (msg->data == true)
-  {
-    cmd_.stand_cmd_ = true;
-  }
 #else
     const std_msgs::Bool::ConstPtr &msg)
+#endif
 {
   if (msg->data == true)
   {
     cmd_.stand_cmd_ = true;
   }
-#endif
 }
 
 void SpotMicroMotionCmd::idleCommandCallback(
 #ifdef ANTONIO
-    const std_msgs__msg__Bool &msg)
-{
-  if (msg.data == true)
-  {
-    cmd_.idle_cmd_ = true;
-  }
+    const std_msgs__msg__Bool *msg)
 #else
     const std_msgs::Bool::ConstPtr &msg)
+#endif
 {
   if (msg->data == true)
   {
     cmd_.idle_cmd_ = true;
   }
-#endif
 }
 
 void SpotMicroMotionCmd::walkCommandCallback(
 #ifdef ANTONIO
-    const std_msgs__msg__Bool &msg)
-{
-  if (msg.data == true)
-  {
-    cmd_.walk_cmd_ = true;
-  }
+    const std_msgs__msg__Bool *msg)
 #else
     const std_msgs::Bool::ConstPtr &msg)
+#endif
 {
   if (msg->data == true)
   {
     cmd_.walk_cmd_ = true;
   }
-#endif
 }
 
 void SpotMicroMotionCmd::angleCommandCallback(
 #ifdef ANTONIO
-    const geometry_msgs__msg__Vector3 &msg)
+    const geometry_msgs__msg__Vector3 *msg)
 {
-  cmd_.phi_cmd_ = msg.x;
-  cmd_.theta_cmd_ = msg.y;
-  cmd_.psi_cmd_ = msg.z;
+  cmd_.phi_cmd_ = msg->x;
+  cmd_.theta_cmd_ = msg->y;
+  cmd_.psi_cmd_ = msg->z;
 #else
     const geometry_msgs::Vector3ConstPtr &msg)
 {
@@ -636,8 +624,6 @@ void SpotMicroMotionCmd::velCommandCallback(
   cmd_.yaw_rate_cmd_rps_ = msg->angular.z;
 #endif
 }
-
-
 
 void SpotMicroMotionCmd::resetEventCommands()
 {
