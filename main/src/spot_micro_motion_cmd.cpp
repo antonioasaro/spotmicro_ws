@@ -59,9 +59,25 @@ typedef std::vector<std::pair<std::string, std::string>> VectorStringPairs;
     }                                                                                \
   }
 
+rcl_subscription_t idle_cmd_subscriber;
+rcl_subscription_t stand_cmd_subscriber;
 rcl_subscription_t cmd_vel_msg_subscriber;
+std_msgs__msg__Bool idle_cmd;
+std_msgs__msg__Bool stand_cmd;
 geometry_msgs__msg__Twist cmd_vel_msg;
 
+void idle_cmd_subscription_callback(const void *msgin)
+{
+
+  std_msgs__msg__Bool *msg = (std_msgs__msg__Bool *)msgin;
+  printf("Received keyboard idle\n");
+}
+void stand_cmd_subscription_callback(const void *msgin)
+{
+
+  std_msgs__msg__Bool *msg = (std_msgs__msg__Bool *)msgin;
+  printf("Received keyboard stand\n");
+}
 void cmd_vel_msg_subscription_callback(const void *msgin)
 {
 
@@ -140,15 +156,15 @@ SpotMicroMotionCmd::SpotMicroMotionCmd(ros::NodeHandle &nh, ros::NodeHandle &pnh
   // Initialize publishers and subscribers
   // stand cmd event subscriber
 #ifdef ANTONIO
-  // Create cmd_vel subscriber
-  printf("Create cmd_vel msg subscriber\n");
-  RCCHECK(rclc_subscription_init_default(
-      &cmd_vel_msg_subscriber,
-      &nh,
-      ROSIDL_GET_MSG_TYPE_SUPPORT(geometry_msgs, msg, Twist),
-      "/cmd_vel"));
+  // Create subscribers
+  printf("Create subscribers\n");
+  RCCHECK(rclc_subscription_init_default(&idle_cmd_subscriber, &nh, ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Bool), "/idle_cmd"));
+  RCCHECK(rclc_subscription_init_default(&stand_cmd_subscriber, &nh, ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Bool), "/stand_cmd"));
+//  RCCHECK(rclc_subscription_init_default(&cmd_vel_msg_subscriber, &nh, ROSIDL_GET_MSG_TYPE_SUPPORT(geometry_msgs, msg, Twist), "/cmd_vel"));
       
-  RCCHECK(rclc_executor_add_subscription(&executor, &cmd_vel_msg_subscriber, &cmd_vel_msg, &cmd_vel_msg_subscription_callback, ON_NEW_DATA));
+  RCCHECK(rclc_executor_add_subscription(&executor, &idle_cmd_subscriber, &idle_cmd, &idle_cmd_subscription_callback, ON_NEW_DATA));
+  RCCHECK(rclc_executor_add_subscription(&executor, &stand_cmd_subscriber, &stand_cmd, &stand_cmd_subscription_callback, ON_NEW_DATA));
+//  RCCHECK(rclc_executor_add_subscription(&executor, &cmd_vel_msg_subscriber, &cmd_vel_msg, &cmd_vel_msg_subscription_callback, ON_NEW_DATA));
 #else
   stand_sub_ = nh.subscribe("/stand_cmd", 1, &SpotMicroMotionCmd::standCommandCallback, this);
 

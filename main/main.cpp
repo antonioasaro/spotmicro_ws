@@ -441,7 +441,8 @@ extern "C" void app_main(void)
 	vTaskDelay(500 / portTICK_PERIOD_MS);
 
 #ifdef TEST_KINEMATICS
-#define TOTAL_EXECUTORS 2
+// Total = 1 timer in map & publishers/subscribers in SpotMicroMotionCmd
+#define TOTAL_EXECUTORS 4
 	printf("Testing Kinematics!!\n");
 	xTaskCreate((TaskFunction_t)&ssd1306_text_task, "ssd1306_display_text", 2048,
 				(void *)"Kinematics!!!   ", 1, NULL);
