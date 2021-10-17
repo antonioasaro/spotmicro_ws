@@ -1,4 +1,4 @@
-#pragma once                  //designed to include the current source file only once in a single compilation.
+#pragma once //designed to include the current source file only once in a single compilation.
 #ifndef SPOT_MICRO_MOTION_CMD //usd for conditional compiling.
 #define SPOT_MICRO_MOTION_CMD
 
@@ -40,8 +40,7 @@
 
 // Define a configuration struct
 // To hold configuration parameters from parameter server/config file
-struct SpotMicroNodeConfig
-{
+struct SpotMicroNodeConfig {
   smk::SpotMicroConfig smc;
   float default_stand_height;
   float stand_front_x_offset;
@@ -88,10 +87,11 @@ struct SpotMicroNodeConfig
   float lidar_yaw_angle;
 };
 
+
 /* defining the class */
 class SpotMicroMotionCmd
 {
-public:
+ public:
   // Constructor
 #ifdef ANTONIO
   SpotMicroMotionCmd(rcl_node_t &nh, rclc_executor_t &executor);
@@ -100,8 +100,8 @@ public:
 #endif
 
   // Destructor
-  ~SpotMicroMotionCmd();
-
+  ~SpotMicroMotionCmd(); 
+  
   // Main loop runner, called periodically at the loop rate
   void runOnce();
 
@@ -112,7 +112,7 @@ public:
   void setServoCommandMessageData();
 
   // Publishes a servo proportional command message
-  void publishServoProportionalCommand();
+  void publishServoProportionalCommand(); 
 
   // Publishes a servo absolute command message with all servos set to a command
   // value of 0. This effectively disables the servos (stops them from holding
@@ -151,8 +151,7 @@ public:
   // Callback method for velocity command
   // Currently, the only supported commands from this message are
   // x and y axis linear velocity, and z axis angular rate
-  void velCommandCallback(const geometry_msgs__msg__Twist &msg);
-  //void standCommandCallback(const std_msgs__msg__Bool *msg);
+  void velCommandCallback(const geometry_msgs__msg__Twist *msg);
 #endif
 
 private:
@@ -168,14 +167,14 @@ private:
 
   // Spot Micro Kinematics object. Holds kinematic state of robot, and holds
   // kinematics operations for setting position/orientation of the robot
-  smk::SpotMicroKinematics sm_;
+  smk::SpotMicroKinematics sm_; 
 
   // Spot Micro Node Config object
   SpotMicroNodeConfig smnc_;
 
   // Holds the body state to be commanded: feet position, body position and
   // angles
-  smk::BodyState body_state_cmd_;
+  smk::BodyState body_state_cmd_; 
 
   // Odometry of the robot position and orientation based on integrated rate
   // commands. Only x and y position, and yaw angle, will be integrated from
@@ -183,7 +182,10 @@ private:
   smk::BodyState robot_odometry_;
 
   // Map to hold servo command values in radians
-  std::map<std::string, float> servo_cmds_rad_ = {{"RF_3", 0.0f}, {"RF_2", 0.0f}, {"RF_1", 0.0f}, {"RB_3", 0.0f}, {"RB_2", 0.0f}, {"RB_1", 0.0f}, {"LB_3", 0.0f}, {"LB_2", 0.0f}, {"LB_1", 0.0f}, {"LF_3", 0.0f}, {"LF_2", 0.0f}, {"LF_1", 0.0f}};
+  std::map<std::string, float> servo_cmds_rad_ = { {"RF_3", 0.0f}, {"RF_2", 0.0f}, {"RF_1", 0.0f},
+                                                   {"RB_3", 0.0f}, {"RB_2", 0.0f}, {"RB_1", 0.0f},
+                                                   {"LB_3", 0.0f}, {"LB_2", 0.0f}, {"LB_1", 0.0f},
+                                                   {"LF_3", 0.0f}, {"LF_2", 0.0f}, {"LF_1", 0.0f} };
 
   // Reads parameters from parameter server to initialize spot micro node config
   // struct
@@ -234,11 +236,12 @@ private:
   // Servo array message for servo absolute command
   i2cpwm_board::ServoArray servo_array_absolute_;
 
+
   // ROS publisher and subscriber handles
-  ros::NodeHandle nh_;        // Defining the ros NodeHandle variable for registrating the same with the master
-  ros::NodeHandle pnh_;       // Private version of node handle
+  ros::NodeHandle nh_; // Defining the ros NodeHandle variable for registrating the same with the master
+  ros::NodeHandle pnh_; // Private version of node handle
   ros::Subscriber stand_sub_; // ros subscriber handle for stand_cmd topic
-  ros::Subscriber idle_sub_;  // ros subscriber handle for idle_cmd topic
+  ros::Subscriber idle_sub_; // ros subscriber handle for idle_cmd topic
   ros::Subscriber walk_sub_;
   ros::Subscriber vel_cmd_sub_;
   ros::Subscriber body_angle_cmd_sub_;
@@ -274,22 +277,21 @@ private:
 
 #ifndef ANTONIO
   // Callback method for stand command
-  // void standCommandCallback(const std_msgs__msg__Bool *msg);
-  void standCommandCallback(const std_msgs::Bool::ConstPtr &msg);
+  void standCommandCallback(const std_msgs::Bool::ConstPtr& msg);
 
   // Callback method for idle command
-  void idleCommandCallback(const std_msgs::Bool::ConstPtr &msg);
+  void idleCommandCallback(const std_msgs::Bool::ConstPtr& msg);
 
   // Callback method for walk command
-  void walkCommandCallback(const std_msgs::Bool::ConstPtr &msg);
+  void walkCommandCallback(const std_msgs::Bool::ConstPtr& msg);
 
   // Callback method for angle command
-  void angleCommandCallback(const geometry_msgs::Vector3ConstPtr &msg);
+  void angleCommandCallback(const geometry_msgs::Vector3ConstPtr& msg);
 
   // Callback method for velocity command
-  // Currently, the only supported commands from this message are
-  // x and y axis linear velocity, and z axis angular rate
-  void velCommandCallback(const geometry_msgs::TwistConstPtr &msg);
+  // Currently, the only supported commands from this message are 
+  // x and y axis linear velocity, and z axis angular rate 
+  void velCommandCallback(const geometry_msgs::TwistConstPtr& msg);
 #endif
 
   // Resets all events if they were true
@@ -324,5 +326,6 @@ private:
 
   // Calculates the robot odometry coordinate frame
   Eigen::Affine3d getOdometryTransform();
+
 };
-#endif
+#endif  
