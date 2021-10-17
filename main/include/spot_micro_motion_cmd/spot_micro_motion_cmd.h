@@ -35,6 +35,7 @@
 #include <rcl/error_handling.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "esp_log.h"
 #endif
 
 // Define a configuration struct
@@ -198,6 +199,26 @@ private:
   struct ServoArray
   {
     Servo servos[12];
+  };
+
+  struct ServoConfig
+  {
+    int16_t servo;
+    int16_t center;
+    int16_t range;
+    int16_t direction;
+  };
+
+  typedef struct
+  {
+    ServoConfig servos[12];
+
+  } ServosConfigRequest;
+
+  struct ServosConfig
+  {
+    ServosConfigRequest request;
+    uint16_t response;
   };
 
   // Servo array message for servo proportional command

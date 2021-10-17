@@ -67,6 +67,7 @@ std_msgs__msg__Bool stand_cmd;
 std_msgs__msg__Bool walk_cmd;
 geometry_msgs__msg__Twist cmd_vel_msg;
 extern SpotMicroMotionCmd *motion;
+static const char *TAG = "SpotMicroMotionCmd";
 #endif
 
 #ifdef ANTONIO
@@ -299,12 +300,19 @@ void SpotMicroMotionCmd::runOnce()
 
 bool SpotMicroMotionCmd::publishServoConfiguration()
 {
-#ifndef ANTONIO
   // Create a temporary servo config
+#ifdef ANTONIO
+  ServoConfig temp_servo_config;
+  ServosConfig temp_servo_config_array;
+#else
   i2cpwm_board::ServoConfig temp_servo_config;
   i2cpwm_board::ServosConfig temp_servo_config_array;
+#endif
 
   // Loop through servo configuration dictionary in smnc_, append servo to
+#ifdef ANTONIO
+  uint8_t j = 0;
+#endif
   for (std::map<std::string, std::map<std::string, float>>::iterator
            iter = smnc_.servo_config.begin();
        iter != smnc_.servo_config.end();
@@ -317,21 +325,32 @@ bool SpotMicroMotionCmd::publishServoConfiguration()
     temp_servo_config.servo = servo_config_params["num"];
     temp_servo_config.direction = servo_config_params["direction"];
 
-    // Append to temp_servo_config_array
+// Append to temp_servo_config_array
+#ifdef ANTONIO
+    temp_servo_config_array.request.servos[j++] = temp_servo_config;
+#else
     temp_servo_config_array.request.servos.push_back(temp_servo_config);
+#endif
   }
 
-  // call the client service, return true if succesfull, false if not
+// call the client service, return true if succesfull, false if not
+#ifdef ANTONIO
+  if (1)
+#else
   if (!servos_config_client_.call(temp_servo_config_array))
+#endif
   {
     if (!smnc_.debug_mode && !smnc_.run_standalone)
     {
       // Only error out if not in debug mode or standalone mode
+#ifdef ANTONIO
+      ESP_LOGE(TAG, "Failed to call service servo_config");
+#else
       ROS_ERROR("Failed to call service servo_config");
+#endif
       return false;
     }
   }
-#endif
 
   return true;
 }
@@ -364,7 +383,7 @@ void SpotMicroMotionCmd::setServoCommandMessageData()
 
 void SpotMicroMotionCmd::publishServoProportionalCommand()
 {
-#ifndef ANTONIO
+
   for (std::map<std::string, std::map<std::string, float>>::iterator
            iter = smnc_.servo_config.begin();
        iter != smnc_.servo_config.end();
@@ -383,14 +402,24 @@ void SpotMicroMotionCmd::publishServoProportionalCommand()
     if (servo_proportional_cmd > 1.0f)
     {
       servo_proportional_cmd = 1.0f;
+#ifdef ANTONIO
+      ESP_LOGW(TAG, "Proportional Command above +1.0 was computed, clipped to 1.0");
+      ESP_LOGW(TAG, "Joint %s, Angle: %1.2f", servo_name.c_str(), cmd_ang_rad * 180.0 / M_PI);
+#else
       ROS_WARN("Proportional Command above +1.0 was computed, clipped to 1.0");
       ROS_WARN("Joint %s, Angle: %1.2f", servo_name.c_str(), cmd_ang_rad * 180.0 / M_PI);
+#endif
     }
     else if (servo_proportional_cmd < -1.0f)
     {
       servo_proportional_cmd = -1.0f;
+#ifdef ANTONIO
+      ESP_LOGW(TAG, "Proportional Command below -1.0 was computed, clipped to -1.0");
+      ESP_LOGW(TAG, "Joint %s, Angle: %1.2f", servo_name.c_str(), cmd_ang_rad * 180.0 / M_PI);
+#else
       ROS_WARN("Proportional Command below -1.0 was computed, clipped to -1.0");
       ROS_WARN("Joint %s, Angle: %1.2f", servo_name.c_str(), cmd_ang_rad * 180.0 / M_PI);
+#endif
     }
 
     servo_array_.servos[servo_num - 1].servo = servo_num;
@@ -398,6 +427,7 @@ void SpotMicroMotionCmd::publishServoProportionalCommand()
   }
 
   // Publish message
+#ifndef ANTONIO
   servos_proportional_pub_.publish(servo_array_);
 #endif
 }
