@@ -9,6 +9,7 @@
 #include "std_msgs/msg/float32.h"
 #include "geometry_msgs/msg/vector3.h"
 #include "geometry_msgs/msg/twist.h"
+#include "i2cpwm_controller/i2cpwm_controller.h"
 #else
 #include "std_msgs/Float32.h"
 #include "std_msgs/Bool.h"
@@ -76,6 +77,7 @@ static const char *TAG = "SpotMicroMotionCmd";
 void idle_cmd_subscription_callback(const void *msgin)
 {
 
+  i2cpwm_controller();
   std_msgs__msg__Bool *msg = (std_msgs__msg__Bool *)msgin;
   printf("Received keyboard idle - %d\n", msg->data);
   motion->idleCommandCallback(msg);
@@ -113,6 +115,7 @@ SpotMicroMotionCmd::SpotMicroMotionCmd(rcl_node_t &nh, rclc_executor_t &executor
 SpotMicroMotionCmd::SpotMicroMotionCmd(ros::NodeHandle &nh, ros::NodeHandle &pnh)
 {
 #endif
+
 
 #ifndef ANTONIO
   nh_ = nh;

@@ -1,3 +1,4 @@
+#define ANTONIO
 #include "spot_micro_transition_stand.h"
 
 #include "spot_micro_stand.h"
@@ -64,6 +65,9 @@ void SpotMicroTransitionStandState::handleInputCommands(
     changeState(smmc, std::make_unique<SpotMicroStandState>());
   
   } else {
+#ifdef ANTONIO
+    std::cout << "Antonio - transitioning to stand" << std::endl;
+#endif
     // Otherwise, rise filters and assign output values to body state command
     runFilters(&body_state_filters_);
 
