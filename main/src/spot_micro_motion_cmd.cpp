@@ -178,34 +178,45 @@ SpotMicroMotionCmd::SpotMicroMotionCmd(ros::NodeHandle &nh, ros::NodeHandle &pnh
 #endif
 
   // Initialize publishers and subscribers
-#ifdef ANTONIO
-  // Create subscribers
-  printf("Create subscribers\n");
-  RCCHECK(rclc_subscription_init_default(&idle_cmd_subscriber, &nh, ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Bool), "/idle_cmd"));
-  RCCHECK(rclc_subscription_init_default(&stand_cmd_subscriber, &nh, ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Bool), "/stand_cmd"));
-  RCCHECK(rclc_subscription_init_default(&walk_cmd_subscriber, &nh, ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Bool), "/walk_cmd"));
-  //  RCCHECK(rclc_subscription_init_default(&cmd_vel_msg_subscriber, &nh, ROSIDL_GET_MSG_TYPE_SUPPORT(geometry_msgs, msg, Twist), "/cmd_vel"));
-
-  RCCHECK(rclc_executor_add_subscription(&executor, &idle_cmd_subscriber, &idle_cmd, &idle_cmd_subscription_callback, ON_NEW_DATA));
-  RCCHECK(rclc_executor_add_subscription(&executor, &stand_cmd_subscriber, &stand_cmd, &stand_cmd_subscription_callback, ON_NEW_DATA));
-  RCCHECK(rclc_executor_add_subscription(&executor, &walk_cmd_subscriber, &walk_cmd, &walk_cmd_subscription_callback, ON_NEW_DATA));
-//  RCCHECK(rclc_executor_add_subscription(&executor, &cmd_vel_msg_subscriber, &cmd_vel_msg, &cmd_vel_msg_subscription_callback, ON_NEW_DATA));
-#else
   // stand cmd event subscriber
+#ifdef ANTONIO
+  RCCHECK(rclc_subscription_init_default(&stand_cmd_subscriber, &nh, ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Bool), "/stand_cmd"));
+  RCCHECK(rclc_executor_add_subscription(&executor, &stand_cmd_subscriber, &stand_cmd, &stand_cmd_subscription_callback, ON_NEW_DATA));
+#else
   stand_sub_ = nh.subscribe("/stand_cmd", 1, &SpotMicroMotionCmd::standCommandCallback, this);
-    
+#endif
+
   // idle cmd event subscriber
+#ifdef ANTONIO
+  RCCHECK(rclc_subscription_init_default(&idle_cmd_subscriber, &nh, ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Bool), "/idle_cmd"));
+  RCCHECK(rclc_executor_add_subscription(&executor, &idle_cmd_subscriber, &idle_cmd, &idle_cmd_subscription_callback, ON_NEW_DATA));
+#else
   idle_sub_ = nh.subscribe("/idle_cmd", 1, &SpotMicroMotionCmd::idleCommandCallback, this);
+#endif
 
   // walk cmd event subscriber
+#ifdef ANTONIO
+  RCCHECK(rclc_subscription_init_default(&walk_cmd_subscriber, &nh, ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Bool), "/walk_cmd"));
+  RCCHECK(rclc_executor_add_subscription(&executor, &walk_cmd_subscriber, &walk_cmd, &walk_cmd_subscription_callback, ON_NEW_DATA));
+#else
   walk_sub_ = nh.subscribe("/walk_cmd", 1, &SpotMicroMotionCmd::walkCommandCallback, this);
+#endif
 
   // body angle command subscriber
+#ifndef ANTONIO
   body_angle_cmd_sub_ = nh.subscribe("/angle_cmd", 1, &SpotMicroMotionCmd::angleCommandCallback, this);  
+#endif
 
   // velocity command subscriber 
+#ifdef ANTONIO
+  //// RCCHECK(rclc_subscription_init_default(&cmd_vel_msg_subscriber, &nh, ROSIDL_GET_MSG_TYPE_SUPPORT(geometry_msgs, msg, Twist), "/cmd_vel"));
+  //// RCCHECK(rclc_executor_add_subscription(&executor, &cmd_vel_msg_subscriber, &cmd_vel_msg, &cmd_vel_msg_subscription_callback, ON_NEW_DATA));
+#else
   vel_cmd_sub_ = nh.subscribe("/cmd_vel", 1, &SpotMicroMotionCmd::velCommandCallback, this);  
+#endif
 
+
+#ifndef ANTONIO
   // servos_absolute publisher
   servos_absolute_pub_ = nh.advertise<i2cpwm_board::ServoArray>("servos_absolute", 1);
 
