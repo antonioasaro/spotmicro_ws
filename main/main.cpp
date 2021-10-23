@@ -467,7 +467,7 @@ extern "C" void app_main(void)
 	// Create timer
 	printf("Create spotmicro_timer\n");
 	rcl_timer_t spotmicro_timer;
-	const unsigned int spotmicro_timer_timeout = 1000;
+	const unsigned int spotmicro_timer_timeout = 500;
 	RCCHECK(rclc_timer_init_default(
 		&spotmicro_timer,
 		&support,
@@ -488,15 +488,15 @@ extern "C" void app_main(void)
 	{
 		float rate = (1.0 / motion->getNodeConfig().dt); // Defing the looping rate
 
-		struct timespec ts_begin;
-		struct timespec ts_end;
+		//// struct timespec ts_begin;
+		//// struct timespec ts_end;
 		while (1)
 		{
-			clock_gettime(CLOCK_REALTIME, &ts_begin);
+			//// clock_gettime(CLOCK_REALTIME, &ts_begin);
 			rclc_executor_spin_some(&executor, RCL_MS_TO_NS(100));
 			usleep((1000 / rate) * 1000);
-			clock_gettime(CLOCK_REALTIME, &ts_end);
-			// printf("Delta time is: %.02fms\n", ((float) (ts_end.tv_nsec - ts_begin.tv_nsec)) / (1000 * 1000));
+			//// clock_gettime(CLOCK_REALTIME, &ts_end);
+			//// printf("Delta time is: %.02fms\n", ((float) (ts_end.tv_nsec - ts_begin.tv_nsec)) / (1000 * 1000));
 		}
 	}
 #else

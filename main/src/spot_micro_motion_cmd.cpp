@@ -64,11 +64,9 @@ typedef std::vector<std::pair<std::string, std::string>> VectorStringPairs;
 rcl_subscription_t idle_cmd_subscriber;
 rcl_subscription_t stand_cmd_subscriber;
 rcl_subscription_t walk_cmd_subscriber;
-rcl_subscription_t cmd_vel_msg_subscriber;
 std_msgs__msg__Bool idle_cmd;
 std_msgs__msg__Bool stand_cmd;
 std_msgs__msg__Bool walk_cmd;
-geometry_msgs__msg__Twist cmd_vel_msg;
 extern SpotMicroMotionCmd *motion;
 static const char *TAG = "SpotMicroMotionCmd";
 #endif
@@ -97,13 +95,6 @@ void walk_cmd_subscription_callback(const void *msgin)
   std_msgs__msg__Bool *msg = (std_msgs__msg__Bool *)msgin;
   printf("Received keyboard walk - %d\n", msg->data);
   motion->walkCommandCallback(msg);
-}
-
-void cmd_vel_msg_subscription_callback(const void *msgin)
-{
-
-  geometry_msgs__msg__Twist *msg = (geometry_msgs__msg__Twist *)msgin;
-  printf("Received keyboard: x = %f y = %f z = %f\n", msg->linear.x, msg->linear.y, msg->linear.z);
 }
 #endif
 
@@ -205,18 +196,10 @@ SpotMicroMotionCmd::SpotMicroMotionCmd(ros::NodeHandle &nh, ros::NodeHandle &pnh
   // body angle command subscriber
 #ifndef ANTONIO
   body_angle_cmd_sub_ = nh.subscribe("/angle_cmd", 1, &SpotMicroMotionCmd::angleCommandCallback, this);  
-#endif
 
   // velocity command subscriber 
-#ifdef ANTONIO
-  //// RCCHECK(rclc_subscription_init_default(&cmd_vel_msg_subscriber, &nh, ROSIDL_GET_MSG_TYPE_SUPPORT(geometry_msgs, msg, Twist), "/cmd_vel"));
-  //// RCCHECK(rclc_executor_add_subscription(&executor, &cmd_vel_msg_subscriber, &cmd_vel_msg, &cmd_vel_msg_subscription_callback, ON_NEW_DATA));
-#else
   vel_cmd_sub_ = nh.subscribe("/cmd_vel", 1, &SpotMicroMotionCmd::velCommandCallback, this);  
-#endif
 
-
-#ifndef ANTONIO
   // servos_absolute publisher
   servos_absolute_pub_ = nh.advertise<i2cpwm_board::ServoArray>("servos_absolute", 1);
 
@@ -378,7 +361,7 @@ void SpotMicroMotionCmd::setServoCommandMessageData() {
   servo_cmds_rad_["RF_1"] = joint_angs.right_front.ang1;
   servo_cmds_rad_["RF_2"] = joint_angs.right_front.ang2;
   servo_cmds_rad_["RF_3"] = joint_angs.right_front.ang3;
- 
+
   servo_cmds_rad_["RB_1"] = joint_angs.right_back.ang1;
   servo_cmds_rad_["RB_2"] = joint_angs.right_back.ang2;
   servo_cmds_rad_["RB_3"] = joint_angs.right_back.ang3;
@@ -390,6 +373,11 @@ void SpotMicroMotionCmd::setServoCommandMessageData() {
   servo_cmds_rad_["LB_1"] = joint_angs.left_back.ang1;
   servo_cmds_rad_["LB_2"] = joint_angs.left_back.ang2;
   servo_cmds_rad_["LB_3"] = joint_angs.left_back.ang3;
+
+#ifdef ANTONIO
+    printf("Antonio - RF degs %f, %f, %f\n", joint_angs.right_front.ang1 * 57.3, joint_angs.right_front.ang2 * 57.3, joint_angs.right_front.ang3 * 57.3);
+#endif
+
 }
 
 

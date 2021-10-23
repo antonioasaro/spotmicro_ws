@@ -65,9 +65,6 @@ void SpotMicroTransitionStandState::handleInputCommands(
     changeState(smmc, std::make_unique<SpotMicroStandState>());
   
   } else {
-#ifdef ANTONIO
-    std::cout << "Antonio - transitioning to stand" << std::endl;
-#endif
     // Otherwise, rise filters and assign output values to body state command
     runFilters(&body_state_filters_);
 
@@ -75,6 +72,9 @@ void SpotMicroTransitionStandState::handleInputCommands(
     assignFilterValuesToBodyState(body_state_filters_,
                                   body_state_cmd);
 
+#ifdef ANTONIO
+    printf("Antonio - body_state.y: %f + end_body_state.y: %f\n", body_state.xyz_pos.y, end_body_state_.xyz_pos.y);
+#endif
     // Send command
     smmc->setServoCommandMessageData();
     smmc->publishServoProportionalCommand();
