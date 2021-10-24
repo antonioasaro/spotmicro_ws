@@ -75,9 +75,11 @@ static const char *TAG = "SpotMicroMotionCmd";
 
 #define STRING_BUFFER_LEN 256
 rcl_publisher_t servos_absolute_publisher;
+rcl_publisher_t servos_proportional_publisher;
 rcl_subscription_t servos_absolute_subscriber;
+rcl_subscription_t servos_proportional_subscriber;
 std_msgs__msg__Bool servos_absolute_cmd;
-
+std_msgs__msg__Bool servos_proportional_cmd;
 
 void idle_cmd_subscription_callback(const void *msgin)
 {
@@ -106,7 +108,13 @@ void walk_cmd_subscription_callback(const void *msgin)
 void servos_absolute_subscription_callback(const void *msgin)
 {
 
-  printf("servos_absolute_callback\n");
+  //// printf("Antonio - servos_absolute_callback\n");
+}
+
+void servos_proportional_subscription_callback(const void *msgin)
+{
+
+  //// printf("Antonio - servos_proportional_callback\n");
 }
 #endif
 
@@ -218,15 +226,20 @@ SpotMicroMotionCmd::SpotMicroMotionCmd(ros::NodeHandle &nh, ros::NodeHandle &pnh
 	RCCHECK(rclc_publisher_init_default(&servos_absolute_publisher, &nh,	ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Bool), "/servos_absolute"));
   RCCHECK(rclc_subscription_init_default(&servos_absolute_subscriber, &nh, ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Bool), "/servos_absolute"));
   RCCHECK(rclc_executor_add_subscription(&executor, &servos_absolute_subscriber, &servos_absolute_cmd, &servos_absolute_subscription_callback, ON_NEW_DATA));
-#
 #else
   servos_absolute_pub_ = nh.advertise<i2cpwm_board::ServoArray>("servos_absolute", 1);
 #endif
 
-#ifndef ANTONIO
   // Servos proportional publisher
+#ifdef ANTONIO
+	RCCHECK(rclc_publisher_init_default(&servos_proportional_publisher, &nh,	ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Bool), "/servos_proportional"));
+  RCCHECK(rclc_subscription_init_default(&servos_proportional_subscriber, &nh, ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Bool), "/servos_proportional"));
+  RCCHECK(rclc_executor_add_subscription(&executor, &servos_proportional_subscriber, &servos_proportional_cmd, &servos_proportional_subscription_callback, ON_NEW_DATA));
+#else
   servos_proportional_pub_ = nh.advertise<i2cpwm_board::ServoArray>("servos_proportional",1);  
-  
+#endif
+
+#ifndef ANTONIO
   // Servos configuration publisher
   servos_config_client_ = nh.serviceClient<i2cpwm_board::ServosConfig>("config_servos");
 
@@ -444,7 +457,11 @@ void SpotMicroMotionCmd::publishServoProportionalCommand() {
   }
 
   // Publish message
-#ifndef ANTONIO
+#ifdef ANTONIO
+  //// printf("publishServoProportionalCommand()\n");
+  servos_proportional_cmd.data = true;
+  RCCHECK(rcl_publish(&servos_proportional_publisher, (const void *)&servos_proportional_cmd, NULL));
+#else
   servos_proportional_pub_.publish(servo_array_);
 #endif
 }
@@ -453,7 +470,7 @@ void SpotMicroMotionCmd::publishZeroServoAbsoluteCommand()
 {
   // Publish the servo absolute message
 #ifdef ANTONIO
-  printf("publishZeroServoAbsoluteCommand()\n");
+  //// printf("publishZeroServoAbsoluteCommand()\n");
   servos_absolute_cmd.data = true;
   RCCHECK(rcl_publish(&servos_absolute_publisher, (const void *)&servos_absolute_cmd, NULL));
 #else

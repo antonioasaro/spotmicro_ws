@@ -72,7 +72,7 @@ void SpotMicroTransitionIdleState::handleInputCommands(
                                   body_state_cmd);
 
 #ifdef ANTONIO
-    printf("Antonio - body_state.y: %f + end_body_state.y: %f\n", body_state.xyz_pos.y, end_body_state_.xyz_pos.y);
+    //// printf("Antonio - body_state.y: %f + end_body_state.y: %f\n", body_state.xyz_pos.y, end_body_state_.xyz_pos.y);
 #endif
     // Send command
     smmc->setServoCommandMessageData();

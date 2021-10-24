@@ -408,7 +408,7 @@ void spotmicro_timer_callback(rcl_timer_t *timer, int64_t last_call_time)
 	if (timer != NULL)
 	{
 		gpio_set_level(LED_GPIO, seq_no++ & 0x1);
-		motion->runOnce();
+		// motion->runOnce();
 		// node.runOnce();
 		// ros::spinOnce();
 		// rate.sleep()
@@ -472,7 +472,7 @@ extern "C" void app_main(void)
 	// Create timer
 	printf("Create spotmicro_timer\n");
 	rcl_timer_t spotmicro_timer;
-	const unsigned int spotmicro_timer_timeout = 500;
+	const unsigned int spotmicro_timer_timeout = 1000;
 	RCCHECK(rclc_timer_init_default(
 		&spotmicro_timer,
 		&support,
@@ -482,7 +482,7 @@ extern "C" void app_main(void)
 	// Create executor
 	printf("Create spotmicro_executors\n");
 	rclc_executor_t executor;
-	RCCHECK(rclc_executor_init(&executor, &support.context, 1 + 4, &allocator));
+	RCCHECK(rclc_executor_init(&executor, &support.context, 1 + SPOT_MICRO_MOTION_CMD_SUBSCRIBERS, &allocator));
 	RCCHECK(rclc_executor_add_timer(&executor, &spotmicro_timer));
 
 	// Initialize spot micro kinematics object of this class
@@ -498,8 +498,9 @@ extern "C" void app_main(void)
 		while (1)
 		{
 			//// clock_gettime(CLOCK_REALTIME, &ts_begin);
+			motion->runOnce();
 			rclc_executor_spin_some(&executor, RCL_MS_TO_NS(100));
-			usleep((1000 / rate) * 1000);
+			usleep((1000 / rate) * 1000     *     10);
 			//// clock_gettime(CLOCK_REALTIME, &ts_end);
 			//// printf("Delta time is: %.02fms\n", ((float) (ts_end.tv_nsec - ts_begin.tv_nsec)) / (1000 * 1000));
 		}
