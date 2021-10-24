@@ -1,5 +1,5 @@
-#include "spot_micro_motion_cmd.h"
 #define ANTONIO
+#include "spot_micro_motion_cmd.h"
 
 #include <eigen3/Eigen/Geometry>
 #ifdef ANTONIO
@@ -144,7 +144,7 @@ SpotMicroMotionCmd::SpotMicroMotionCmd(ros::NodeHandle &nh, ros::NodeHandle &pnh
   for (int i = 1; i <= smnc_.num_servos; i++)
   {
 #ifdef ANTONIO
-    Servo temp_servo;
+    i2cpwm_board__msg__Servo temp_servo;
 #else
     i2cpwm_board::Servo temp_servo;
 #endif
@@ -297,7 +297,7 @@ void SpotMicroMotionCmd::runOnce() {
 bool SpotMicroMotionCmd::publishServoConfiguration() {  
   // Create a temporary servo config
 #ifdef ANTONIO
-  ServoConfig temp_servo_config;
+  i2cpwm_board__msg__ServoConfig temp_servo_config;
   ServosConfig temp_servo_config_array;
 #else
   i2cpwm_board::ServoConfig temp_servo_config;

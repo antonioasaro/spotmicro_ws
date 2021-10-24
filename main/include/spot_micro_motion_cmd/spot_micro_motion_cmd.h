@@ -3,7 +3,13 @@
 #define SPOT_MICRO_MOTION_CMD
 
 #define ANTONIO
-#ifndef ANTONIO
+#ifdef ANTONIO
+#include "std_msgs/msg/bool.h"
+#include "std_msgs/msg/string.h"
+#include "geometry_msgs/msg/vector3.h"
+#include "geometry_msgs/msg/twist.h"
+#include "i2cpwm_controller/i2cpwm_controller.h"
+#else
 #include <ros/ros.h>
 #include <tf2_ros/transform_broadcaster.h>
 #include <tf2_ros/static_transform_broadcaster.h>
@@ -14,11 +20,6 @@
 #include "std_msgs/Float32MultiArray.h"
 #include "i2cpwm_board/Servo.h"
 #include "i2cpwm_board/ServoArray.h"
-#else
-#include "std_msgs/msg/bool.h"
-#include "std_msgs/msg/string.h"
-#include "geometry_msgs/msg/vector3.h"
-#include "geometry_msgs/msg/twist.h"
 #endif
 
 #include "command.h"
@@ -192,36 +193,36 @@ private:
   void readInConfigParameters();
 
 #ifdef ANTONIO
-  struct Servo
-  {
-    int16_t servo;
-    float_t value;
-  };
+  // struct Servo
+  // {
+  //   int16_t servo;
+  //   float_t value;
+  // };
 
-  struct ServoArray
-  {
-    Servo servos[12];
-  };
+  // struct ServoArray
+  // {
+  //   Servo servos[12];
+  // };
 
-  struct ServoConfig
-  {
-    int16_t servo;
-    int16_t center;
-    int16_t range;
-    int16_t direction;
-  };
+  // struct ServoConfig
+  // {
+  //   int16_t servo;
+  //   int16_t center;
+  //   int16_t range;
+  //   int16_t direction;
+  // };
 
-  typedef struct
-  {
-    ServoConfig servos[12];
+  // typedef struct
+  // {
+  //   ServoConfig servos[12];
 
-  } ServosConfigRequest;
+  // } ServosConfigRequest;
 
-  struct ServosConfig
-  {
-    ServosConfigRequest request;
-    uint16_t response;
-  };
+  // struct ServosConfig
+  // {
+  //   ServosConfigRequest request;
+  //   uint16_t response;
+  // };
 
   // Servo array message for servo proportional command
   ServoArray servo_array_;

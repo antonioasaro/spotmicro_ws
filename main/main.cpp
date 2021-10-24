@@ -442,8 +442,13 @@ extern "C" void app_main(void)
 
 #ifdef TEST_KINEMATICS
 	printf("Testing Kinematics!!\n");
+	// Initialize OLED
 	xTaskCreate((TaskFunction_t)&ssd1306_text_task, "ssd1306_display_text", 2048,
 				(void *)"Kinematics!!!   ", 1, NULL);
+	vTaskDelay(500 / portTICK_PERIOD_MS);
+
+	// Initialize SERVO i2cdev 
+	ESP_ERROR_CHECK(i2cdev_init());
 	vTaskDelay(500 / portTICK_PERIOD_MS);
 
 	rcl_allocator_t allocator = rcl_get_default_allocator();
@@ -500,7 +505,6 @@ extern "C" void app_main(void)
 		}
 	}
 #else
-
 	// Initializing mpu6050
 	printf("Initialize MPU6050\n");
 	mpu6050();
