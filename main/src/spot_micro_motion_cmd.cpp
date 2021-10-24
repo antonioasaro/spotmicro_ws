@@ -3,6 +3,9 @@
 
 #include <eigen3/Eigen/Geometry>
 #ifdef ANTONIO
+#include <std_msgs/msg/int32.h>
+#include <std_msgs/msg/header.h>
+#include <geometry_msgs/msg/twist.h>
 #include "std_msgs/msg/float32.h"
 #include "std_msgs/msg/bool.h"
 #include "std_msgs/msg/string.h"
@@ -69,13 +72,16 @@ std_msgs__msg__Bool stand_cmd;
 std_msgs__msg__Bool walk_cmd;
 extern SpotMicroMotionCmd *motion;
 static const char *TAG = "SpotMicroMotionCmd";
-#endif
 
-#ifdef ANTONIO
+#define STRING_BUFFER_LEN 256
+rcl_publisher_t servos_absolute_publisher;
+rcl_subscription_t servos_absolute_subscriber;
+std_msgs__msg__Bool servos_absolute_cmd;
+
+
 void idle_cmd_subscription_callback(const void *msgin)
 {
 
-  i2cpwm_controller();
   std_msgs__msg__Bool *msg = (std_msgs__msg__Bool *)msgin;
   printf("Received keyboard idle - %d\n", msg->data);
   motion->idleCommandCallback(msg);
@@ -95,6 +101,12 @@ void walk_cmd_subscription_callback(const void *msgin)
   std_msgs__msg__Bool *msg = (std_msgs__msg__Bool *)msgin;
   printf("Received keyboard walk - %d\n", msg->data);
   motion->walkCommandCallback(msg);
+}
+
+void servos_absolute_subscription_callback(const void *msgin)
+{
+
+  printf("servos_absolute_callback\n");
 }
 #endif
 
@@ -199,10 +211,19 @@ SpotMicroMotionCmd::SpotMicroMotionCmd(ros::NodeHandle &nh, ros::NodeHandle &pnh
 
   // velocity command subscriber 
   vel_cmd_sub_ = nh.subscribe("/cmd_vel", 1, &SpotMicroMotionCmd::velCommandCallback, this);  
+#endif
 
   // servos_absolute publisher
+#ifdef ANTONIO
+	RCCHECK(rclc_publisher_init_default(&servos_absolute_publisher, &nh,	ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Bool), "/servos_absolute"));
+  RCCHECK(rclc_subscription_init_default(&servos_absolute_subscriber, &nh, ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Bool), "/servos_absolute"));
+  RCCHECK(rclc_executor_add_subscription(&executor, &servos_absolute_subscriber, &servos_absolute_cmd, &servos_absolute_subscription_callback, ON_NEW_DATA));
+#
+#else
   servos_absolute_pub_ = nh.advertise<i2cpwm_board::ServoArray>("servos_absolute", 1);
+#endif
 
+#ifndef ANTONIO
   // Servos proportional publisher
   servos_proportional_pub_ = nh.advertise<i2cpwm_board::ServoArray>("servos_proportional",1);  
   
@@ -430,8 +451,12 @@ void SpotMicroMotionCmd::publishServoProportionalCommand() {
 
 void SpotMicroMotionCmd::publishZeroServoAbsoluteCommand()
 {
-#ifndef ANTONIO
   // Publish the servo absolute message
+#ifdef ANTONIO
+  printf("publishZeroServoAbsoluteCommand()\n");
+  servos_absolute_cmd.data = true;
+  RCCHECK(rcl_publish(&servos_absolute_publisher, (const void *)&servos_absolute_cmd, NULL));
+#else
   servos_absolute_pub_.publish(servo_array_absolute_);
 #endif
 }

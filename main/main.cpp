@@ -482,7 +482,7 @@ extern "C" void app_main(void)
 	// Create executor
 	printf("Create spotmicro_executors\n");
 	rclc_executor_t executor;
-	RCCHECK(rclc_executor_init(&executor, &support.context, 1 + 3, &allocator));
+	RCCHECK(rclc_executor_init(&executor, &support.context, 1 + 4, &allocator));
 	RCCHECK(rclc_executor_add_timer(&executor, &spotmicro_timer));
 
 	// Initialize spot micro kinematics object of this class
