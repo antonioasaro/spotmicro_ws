@@ -394,7 +394,7 @@ void app_gpios(void)
 	gpio_reset_pin(LED_GPIO);
 	gpio_set_direction(LED_GPIO, GPIO_MODE_OUTPUT);
 	gpio_reset_pin(RELAY_GPIO);
-	gpio_set_level(RELAY_GPIO, 0);
+	gpio_set_level(RELAY_GPIO, 1);
 	gpio_set_direction(RELAY_GPIO, GPIO_MODE_OUTPUT);
 	gpio_pad_select_gpio(BUTTON_GPIO);
 	gpio_set_direction(BUTTON_GPIO, GPIO_MODE_INPUT);

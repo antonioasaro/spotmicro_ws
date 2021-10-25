@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <string.h>
 #include <math.h>
 
@@ -17,6 +18,7 @@
 #define ADDR PCA9685_ADDR_BASE
 #define SDA_GPIO gpio_num_t(4)
 #define SCL_GPIO gpio_num_t(5)
+#define RELAY_GPIO gpio_num_t(18)
 #define PWM_FREQ_HZ 50
 #define SERVO_MIN 200 // (20ms / 4096 ticks) == 4.88 us * 200
 #define SERVO_MAX 400 // 4.88 us * 400
@@ -42,6 +44,8 @@ void i2cpwm_controller_init()
         if (pca9685_set_pwm_value(&dev, 0, val) != ESP_OK)
             ESP_LOGE(TAG, "Could not set PWM value on ch%d", i);
     }
+    gpio_set_level(RELAY_GPIO, 0);
+    usleep(1000);
 }
 
 void i2cpwm_controller_servos_absolute()
@@ -49,7 +53,7 @@ void i2cpwm_controller_servos_absolute()
     uint16_t val;
 
     val = SERVO_MIN;
-    ESP_LOGI(TAG, "i2cpwm_controller_servos_absolute()");
+    //// ESP_LOGI(TAG, "i2cpwm_controller_servos_absolute()");
     if (pca9685_set_pwm_value(&dev, 0, val) != ESP_OK)
         ESP_LOGE(TAG, "Could not set PWM value on ch0");
 }
@@ -59,7 +63,7 @@ void i2cpwm_controller_servos_proportional()
     uint16_t val;
 
     val = SERVO_MAX;
-    ESP_LOGI(TAG, "i2cpwm_controller_servos_proportyional()");
+    //// ESP_LOGI(TAG, "i2cpwm_controller_servos_proportyional()");
     if (pca9685_set_pwm_value(&dev, 0, val) != ESP_OK)
         ESP_LOGE(TAG, "Could not set PWM value on ch0");
 }
