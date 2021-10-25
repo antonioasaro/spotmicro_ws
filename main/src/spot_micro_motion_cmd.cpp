@@ -112,7 +112,11 @@ void servos_absolute_subscription_callback(const void *msgin)
 
   i2cpwm_board__msg__ServoArray *msg = (i2cpwm_board__msg__ServoArray *)msgin;
   if (!once) {
-    printf("Antonio - servos_absolute_callback: %d %d %d\n", msg->servos.size, msg->servos.capacity, msg->servos.data->servo);
+    printf("Antonio - servos_absolute_callback: %d %d %d %f %d %f\n", 
+      msg->servos.size, msg->servos.capacity, 
+      msg->servos.data[0].servo, msg->servos.data[0].value,
+      msg->servos.data[1].servo, msg->servos.data[1].value
+    );
     once = true;
   }
 }
@@ -229,8 +233,8 @@ SpotMicroMotionCmd::SpotMicroMotionCmd(ros::NodeHandle &nh, ros::NodeHandle &pnh
 
   // servos_absolute publisher
 #ifdef ANTONIO
-	RCCHECK(rclc_publisher_init_default(&servos_absolute_publisher, &nh,	ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Bool), "/servos_absolute"));
-  RCCHECK(rclc_subscription_init_default(&servos_absolute_subscriber, &nh, ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Bool), "/servos_absolute"));
+	RCCHECK(rclc_publisher_init_default(&servos_absolute_publisher, &nh,	ROSIDL_GET_MSG_TYPE_SUPPORT(i2cpwm_board, msg, ServoArray), "/servos_absolute"));
+  RCCHECK(rclc_subscription_init_default(&servos_absolute_subscriber, &nh, ROSIDL_GET_MSG_TYPE_SUPPORT(i2cpwm_board, msg, ServoArray), "/servos_absolute"));
   RCCHECK(rclc_executor_add_subscription(&executor, &servos_absolute_subscriber, &servos_absolute_cmd, &servos_absolute_subscription_callback, ON_NEW_DATA));
 #else
   servos_absolute_pub_ = nh.advertise<i2cpwm_board::ServoArray>("servos_absolute", 1);
@@ -476,11 +480,8 @@ void SpotMicroMotionCmd::publishZeroServoAbsoluteCommand()
 {
   // Publish the servo absolute message
 #ifdef ANTONIO
-  //// printf("publishZeroServoAbsoluteCommand()\n");
   servos_absolute_cmd.servos.size = 12;
   servos_absolute_cmd.servos.capacity = 12;
-  servo_array_absolute_.servos[0].servo = 98;
-  servo_array_absolute_.servos[0].value = 1.234;
   servos_absolute_cmd.servos.data = servo_array_absolute_.servos;
   RCCHECK(rcl_publish(&servos_absolute_publisher, (const void *)&servos_absolute_cmd, NULL));
 #else
