@@ -79,7 +79,7 @@ rcl_publisher_t servos_proportional_publisher;
 rcl_subscription_t servos_absolute_subscriber;
 rcl_subscription_t servos_proportional_subscriber;
 i2cpwm_board__msg__ServoArray servos_absolute_cmd;
-std_msgs__msg__Bool servos_proportional_cmd;
+i2cpwm_board__msg__ServoArray servos_proportional_cmd;
 
 void idle_cmd_subscription_callback(const void *msgin)
 {
@@ -108,23 +108,36 @@ void walk_cmd_subscription_callback(const void *msgin)
 void servos_absolute_subscription_callback(const void *msgin)
 {
 
-  static bool once = false;
+  // static bool once = false;
 
-  i2cpwm_board__msg__ServoArray *msg = (i2cpwm_board__msg__ServoArray *)msgin;
-  if (!once) {
-    printf("Antonio - servos_absolute_callback: %d %d %d %f %d %f\n", 
-      msg->servos.size, msg->servos.capacity, 
-      msg->servos.data[0].servo, msg->servos.data[0].value,
-      msg->servos.data[1].servo, msg->servos.data[1].value
-    );
-    once = true;
-  }
+  // i2cpwm_board__msg__ServoArray *msg = (i2cpwm_board__msg__ServoArray *)msgin;
+  // if (!once) {
+  //   printf("Antonio - servos_absolute_callback: %d %d %d %f %d %f\n", 
+  //     msg->servos.size, msg->servos.capacity, 
+  //     msg->servos.data[0].servo, msg->servos.data[0].value,
+  //     msg->servos.data[1].servo, msg->servos.data[1].value
+  //   );
+  //   once = true;
+  // }
+  i2cpwm_controller_servos_absolute();
 }
 
 void servos_proportional_subscription_callback(const void *msgin)
 {
 
-  //// printf("Antonio - servos_proportional_callback\n");
+  // static bool once = false;
+
+  // i2cpwm_board__msg__ServoArray *msg = (i2cpwm_board__msg__ServoArray *)msgin;
+  // if (!once) {
+  //   printf("Antonio - servos_proportional_callback: %d %d %d %f %d %f\n", 
+  //     msg->servos.size, msg->servos.capacity, 
+  //     msg->servos.data[0].servo, msg->servos.data[0].value,
+  //     msg->servos.data[1].servo, msg->servos.data[1].value
+  //   );
+  //   once = true;
+  // }
+
+  i2cpwm_controller_servos_proportional();
 }
 #endif
 
@@ -132,6 +145,11 @@ void servos_proportional_subscription_callback(const void *msgin)
 #ifdef ANTONIO
 SpotMicroMotionCmd::SpotMicroMotionCmd(rcl_node_t &nh, rclc_executor_t &executor)
 {
+static bool once = true;
+  if (once) {
+    smnc_.debug_mode = false; 
+    once = false;
+  }
 #else
 SpotMicroMotionCmd::SpotMicroMotionCmd(ros::NodeHandle &nh, ros::NodeHandle &pnh)
 {
@@ -242,8 +260,8 @@ SpotMicroMotionCmd::SpotMicroMotionCmd(ros::NodeHandle &nh, ros::NodeHandle &pnh
 
   // Servos proportional publisher
 #ifdef ANTONIO
-	RCCHECK(rclc_publisher_init_default(&servos_proportional_publisher, &nh,	ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Bool), "/servos_proportional"));
-  RCCHECK(rclc_subscription_init_default(&servos_proportional_subscriber, &nh, ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Bool), "/servos_proportional"));
+	RCCHECK(rclc_publisher_init_default(&servos_proportional_publisher, &nh,	ROSIDL_GET_MSG_TYPE_SUPPORT(i2cpwm_board, msg, ServoArray), "/servos_proportional"));
+  RCCHECK(rclc_subscription_init_default(&servos_proportional_subscriber, &nh, ROSIDL_GET_MSG_TYPE_SUPPORT(i2cpwm_board, msg, ServoArray), "/servos_proportional"));
   RCCHECK(rclc_executor_add_subscription(&executor, &servos_proportional_subscriber, &servos_proportional_cmd, &servos_proportional_subscription_callback, ON_NEW_DATA));
 #else
   servos_proportional_pub_ = nh.advertise<i2cpwm_board::ServoArray>("servos_proportional",1);  
@@ -291,6 +309,11 @@ SpotMicroMotionCmd::SpotMicroMotionCmd(ros::NodeHandle &nh, ros::NodeHandle &pnh
       body_state_msg_.data.push_back(0.0f); 
     }
   }
+#endif
+
+#ifdef ANTONIO
+  // Initialize the PCA9685
+  i2cpwm_controller_init();
 #endif
 
   // Publish static transforms
@@ -468,8 +491,9 @@ void SpotMicroMotionCmd::publishServoProportionalCommand() {
 
   // Publish message
 #ifdef ANTONIO
-  //// printf("publishServoProportionalCommand()\n");
-  servos_proportional_cmd.data = true;
+  servos_proportional_cmd.servos.size = 12;
+  servos_proportional_cmd.servos.capacity = 12;
+  servos_proportional_cmd.servos.data = servo_array_.servos;
   RCCHECK(rcl_publish(&servos_proportional_publisher, (const void *)&servos_proportional_cmd, NULL));
 #else
   servos_proportional_pub_.publish(servo_array_);
@@ -480,7 +504,7 @@ void SpotMicroMotionCmd::publishZeroServoAbsoluteCommand()
 {
   // Publish the servo absolute message
 #ifdef ANTONIO
-  servos_absolute_cmd.servos.size = 12;
+  servos_proportional_cmd.servos.size = 12;
   servos_absolute_cmd.servos.capacity = 12;
   servos_absolute_cmd.servos.data = servo_array_absolute_.servos;
   RCCHECK(rcl_publish(&servos_absolute_publisher, (const void *)&servos_absolute_cmd, NULL));

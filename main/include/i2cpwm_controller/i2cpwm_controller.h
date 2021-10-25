@@ -1,7 +1,10 @@
 #ifndef I2CPWM_CONTROLLER //used for conditional compiling.
 #define I2CPWM_CONTROLLER
 
-extern void i2cpwm_controller(void);
+extern void i2cpwm_controller_init(void);
+extern void i2cpwm_controller_servos_absolute(void);
+extern void i2cpwm_controller_servos_proportional(void);
+
 #include "i2cpwm_board/msg/servo.h"
 #include "i2cpwm_board/msg/servo_array.h"
 #include "i2cpwm_board/msg/servo_config.h"

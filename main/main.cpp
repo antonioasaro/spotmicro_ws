@@ -447,7 +447,7 @@ extern "C" void app_main(void)
 				(void *)"Kinematics!!!   ", 1, NULL);
 	vTaskDelay(500 / portTICK_PERIOD_MS);
 
-	// Initialize SERVO i2cdev 
+	// Initialize i2cdev 
 	ESP_ERROR_CHECK(i2cdev_init());
 	vTaskDelay(500 / portTICK_PERIOD_MS);
 

@@ -194,37 +194,6 @@ private:
   void readInConfigParameters();
 
 #ifdef ANTONIO
-  // struct Servo
-  // {
-  //   int16_t servo;
-  //   float_t value;
-  // };
-
-  // struct ServoArray
-  // {
-  //   Servo servos[12];
-  // };
-
-  // struct ServoConfig
-  // {
-  //   int16_t servo;
-  //   int16_t center;
-  //   int16_t range;
-  //   int16_t direction;
-  // };
-
-  // typedef struct
-  // {
-  //   ServoConfig servos[12];
-
-  // } ServosConfigRequest;
-
-  // struct ServosConfig
-  // {
-  //   ServosConfigRequest request;
-  //   uint16_t response;
-  // };
-
   // Servo array message for servo proportional command
   ServoArray servo_array_;
 
