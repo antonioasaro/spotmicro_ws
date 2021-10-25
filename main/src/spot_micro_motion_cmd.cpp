@@ -78,7 +78,7 @@ rcl_publisher_t servos_absolute_publisher;
 rcl_publisher_t servos_proportional_publisher;
 rcl_subscription_t servos_absolute_subscriber;
 rcl_subscription_t servos_proportional_subscriber;
-std_msgs__msg__Bool servos_absolute_cmd;
+i2cpwm_board__msg__ServoArray servos_absolute_cmd;
 std_msgs__msg__Bool servos_proportional_cmd;
 
 void idle_cmd_subscription_callback(const void *msgin)
@@ -108,7 +108,13 @@ void walk_cmd_subscription_callback(const void *msgin)
 void servos_absolute_subscription_callback(const void *msgin)
 {
 
-  //// printf("Antonio - servos_absolute_callback\n");
+  static bool once = false;
+
+  i2cpwm_board__msg__ServoArray *msg = (i2cpwm_board__msg__ServoArray *)msgin;
+  if (!once) {
+    printf("Antonio - servos_absolute_callback: %d %d %d\n", msg->servos.size, msg->servos.capacity, msg->servos.data->servo);
+    once = true;
+  }
 }
 
 void servos_proportional_subscription_callback(const void *msgin)
@@ -471,7 +477,11 @@ void SpotMicroMotionCmd::publishZeroServoAbsoluteCommand()
   // Publish the servo absolute message
 #ifdef ANTONIO
   //// printf("publishZeroServoAbsoluteCommand()\n");
-  servos_absolute_cmd.data = true;
+  servos_absolute_cmd.servos.size = 12;
+  servos_absolute_cmd.servos.capacity = 12;
+  servo_array_absolute_.servos[0].servo = 98;
+  servo_array_absolute_.servos[0].value = 1.234;
+  servos_absolute_cmd.servos.data = servo_array_absolute_.servos;
   RCCHECK(rcl_publish(&servos_absolute_publisher, (const void *)&servos_absolute_cmd, NULL));
 #else
   servos_absolute_pub_.publish(servo_array_absolute_);

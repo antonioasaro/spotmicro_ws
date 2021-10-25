@@ -3,6 +3,7 @@
 
 extern void i2cpwm_controller(void);
 #include "i2cpwm_board/msg/servo.h"
+#include "i2cpwm_board/msg/servo_array.h"
 #include "i2cpwm_board/msg/servo_config.h"
 
 struct ServoArray
