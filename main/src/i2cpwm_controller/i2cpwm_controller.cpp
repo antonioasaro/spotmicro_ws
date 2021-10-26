@@ -80,8 +80,8 @@ void i2cpwm_controller_servos_absolute(i2cpwm_board__msg__ServoArray *msg)
         }
         if (pca9685_set_pwm_value(&dev, servo - 1, value) != ESP_OK)
             ESP_LOGE(TAG, "Could not set PWM value on ch%d", servo - 1);
-        if (servo == 1)
-            ESP_LOGI(TAG, "servo[%d] = %d", servo, value);
+        // if (servo == 1)
+        //     ESP_LOGI(TAG, "servo[%d] = %d", servo, value);
     }
 }
 
@@ -106,7 +106,7 @@ void i2cpwm_controller_servos_proportional(i2cpwm_board__msg__ServoArray *msg)
         }
         if (pca9685_set_pwm_value(&dev, servo - 1, pos) != ESP_OK)
             ESP_LOGE(TAG, "Could not set PWM value on ch%d", servo - 1);
-        if (servo == 1)
-            ESP_LOGI(TAG, "servo[%d] = (direction(%d) * ((range(%d) / 2) * value(%6.4f))) + %d = %d", servo, configp->direction, configp->range, value, configp->center, pos);
+        // if (servo == 1)
+        //     ESP_LOGI(TAG, "servo[%d] = (direction(%d) * ((range(%d) / 2) * value(%6.4f))) + %d = %d", servo, configp->direction, configp->range, value, configp->center, pos);
     }
 }
