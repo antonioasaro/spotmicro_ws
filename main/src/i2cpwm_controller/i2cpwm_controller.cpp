@@ -51,13 +51,19 @@ void i2cpwm_controller_init()
     gpio_set_level(RELAY_GPIO, 0);
 }
 
+///////////////////////////////////////////////////////////////////////////////////
+// the public API is ONE based and hardware is ZERO based
+///////////////////////////////////////////////////////////////////////////////////
 void i2cpwm_controller_config_servo(int servo, int center, int range, int direction)
 {
     _servo_configs[servo - 1].center = center;
     _servo_configs[servo - 1].range = range;
     _servo_configs[servo - 1].direction = direction;
     _servo_configs[servo - 1].mode_pos = POSITION_UNDEFINED;
-    ESP_LOGI(TAG, "Servo #%d configured with center=%d, range=%d, and direction=%d", servo, center, range, direction);
+    if (servo == 1)
+    {
+        ESP_LOGI(TAG, "Servo #%d configured with center=%d, range=%d, and direction=%d", servo, center, range, direction);
+    }
 }
 
 void i2cpwm_controller_servos_absolute(i2cpwm_board__msg__ServoArray *msg)
@@ -66,18 +72,18 @@ void i2cpwm_controller_servos_absolute(i2cpwm_board__msg__ServoArray *msg)
     int value;
 
     //// ESP_LOGI(TAG, "i2cpwm_controller_servos_absolute()");
-    for (int i = 0; i < 12; i++)
+    for (int i = 1; i <= 12; i++)
     {
-        servo = msg->servos.data[0].servo;
-        value = msg->servos.data[0].value;
+        servo = msg->servos.data[i - 1].servo;
+        value = msg->servos.data[i - 1].value;
 
         if ((value < 0) || (value > 4096))
         {
             ESP_LOGE(TAG, "Invalid PWM value %d :: PWM values must be between 0 and 4096", value);
             continue;
         }
-        if (pca9685_set_pwm_value(&dev, servo, value) != ESP_OK)
-            ESP_LOGE(TAG, "Could not set PWM value on ch%d", servo);
+        if (pca9685_set_pwm_value(&dev, servo - 1, value) != ESP_OK)
+            ESP_LOGE(TAG, "Could not set PWM value on ch%d", servo - 1);
     }
 }
 
@@ -85,17 +91,28 @@ void i2cpwm_controller_servos_proportional(i2cpwm_board__msg__ServoArray *msg)
 {
 
     //// ESP_LOGI(TAG, "i2cpwm_controller_servos_proportyional()");
-    int servo = 1;
-    float value = 0.10f;
-    servo_config *configp = &(_servo_configs[servo - 1]);
-    int pos = (configp->direction * (((float)(configp->range) / 2) * value)) + configp->center;
-    if ((pos < 0) || (pos > 4096))
-    {
-        ESP_LOGE(TAG, "Invalid computed position servo[%d] = (direction(%d) * ((range(%d) / 2) * value(%6.4f))) + %d = %d", servo, configp->direction, configp->range, value, configp->center, pos);
-        return;
-    }
-    ESP_LOGI(TAG, "servo[%d] = (direction(%d) * ((range(%d) / 2) * value(%6.4f))) + %d = %d", servo, configp->direction, configp->range, value, configp->center, pos);
+    int servo;
+    float value;
 
-    if (pca9685_set_pwm_value(&dev, 0, SERVO_MAX) != ESP_OK)
-        ESP_LOGE(TAG, "Could not set PWM value on ch0");
+#define SAFETY_FACTOR 0.25
+    for (int i = 1; i <= 12; i++)
+    {
+        servo = msg->servos.data[i - 1].servo;
+        value = msg->servos.data[i - 1].value * SAFETY_FACTOR;
+        servo_config *configp = &(_servo_configs[servo - 1]);
+
+        int pos = (configp->direction * (((float)(configp->range) / 2) * value)) + configp->center;
+        if ((pos < 0) || (pos > 4096))
+        {
+            ESP_LOGE(TAG, "Invalid computed position servo[%d] = (direction(%d) * ((range(%d) / 2) * value(%6.4f))) + %d = %d", servo, configp->direction, configp->range, value, configp->center, pos);
+            return;
+        }
+        if (servo == 1)
+        {
+            ESP_LOGI(TAG, "servo[%d] = (direction(%d) * ((range(%d) / 2) * value(%6.4f))) + %d = %d", servo, configp->direction, configp->range, value, configp->center, pos);
+        }
+
+        if (pca9685_set_pwm_value(&dev, servo - 1, pos) != ESP_OK)
+            ESP_LOGE(TAG, "Could not set PWM value on ch%d", servo - 1);
+    }
 }
