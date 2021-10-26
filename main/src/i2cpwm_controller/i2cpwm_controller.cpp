@@ -83,15 +83,19 @@ void i2cpwm_controller_servos_absolute(i2cpwm_board__msg__ServoArray *msg)
 
 void i2cpwm_controller_servos_proportional(i2cpwm_board__msg__ServoArray *msg)
 {
-    int value;
 
-    printf("Antonio - i2cpwm_controller_servos_proportional: %d %d %d %f %d %f\n",
-           msg->servos.size, msg->servos.capacity,
-           msg->servos.data[0].servo, msg->servos.data[0].value,
-           msg->servos.data[1].servo, msg->servos.data[1].value);
-
-    value = SERVO_MAX;
     //// ESP_LOGI(TAG, "i2cpwm_controller_servos_proportyional()");
-    if (pca9685_set_pwm_value(&dev, 0, value) != ESP_OK)
+    int servo = 1;
+    float value = 0.10f;
+    servo_config *configp = &(_servo_configs[servo - 1]);
+    int pos = (configp->direction * (((float)(configp->range) / 2) * value)) + configp->center;
+    if ((pos < 0) || (pos > 4096))
+    {
+        ESP_LOGE(TAG, "Invalid computed position servo[%d] = (direction(%d) * ((range(%d) / 2) * value(%6.4f))) + %d = %d", servo, configp->direction, configp->range, value, configp->center, pos);
+        return;
+    }
+    ESP_LOGI(TAG, "servo[%d] = (direction(%d) * ((range(%d) / 2) * value(%6.4f))) + %d = %d", servo, configp->direction, configp->range, value, configp->center, pos);
+
+    if (pca9685_set_pwm_value(&dev, 0, SERVO_MAX) != ESP_OK)
         ESP_LOGE(TAG, "Could not set PWM value on ch0");
 }
