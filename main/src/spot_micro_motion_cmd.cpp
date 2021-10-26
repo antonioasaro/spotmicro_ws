@@ -108,36 +108,15 @@ void walk_cmd_subscription_callback(const void *msgin)
 void servos_absolute_subscription_callback(const void *msgin)
 {
 
-  // static bool once = false;
-
-  // i2cpwm_board__msg__ServoArray *msg = (i2cpwm_board__msg__ServoArray *)msgin;
-  // if (!once) {
-  //   printf("Antonio - servos_absolute_callback: %d %d %d %f %d %f\n", 
-  //     msg->servos.size, msg->servos.capacity, 
-  //     msg->servos.data[0].servo, msg->servos.data[0].value,
-  //     msg->servos.data[1].servo, msg->servos.data[1].value
-  //   );
-  //   once = true;
-  // }
-  i2cpwm_controller_servos_absolute();
+  i2cpwm_board__msg__ServoArray *msg = (i2cpwm_board__msg__ServoArray *)msgin;
+  i2cpwm_controller_servos_absolute(msg);
 }
 
 void servos_proportional_subscription_callback(const void *msgin)
 {
 
-  // static bool once = false;
-
-  // i2cpwm_board__msg__ServoArray *msg = (i2cpwm_board__msg__ServoArray *)msgin;
-  // if (!once) {
-  //   printf("Antonio - servos_proportional_callback: %d %d %d %f %d %f\n", 
-  //     msg->servos.size, msg->servos.capacity, 
-  //     msg->servos.data[0].servo, msg->servos.data[0].value,
-  //     msg->servos.data[1].servo, msg->servos.data[1].value
-  //   );
-  //   once = true;
-  // }
-
-  i2cpwm_controller_servos_proportional();
+  i2cpwm_board__msg__ServoArray *msg = (i2cpwm_board__msg__ServoArray *)msgin;
+  i2cpwm_controller_servos_proportional(msg);
 }
 #endif
 
@@ -365,16 +344,13 @@ bool SpotMicroMotionCmd::publishServoConfiguration() {
   // Create a temporary servo config
 #ifdef ANTONIO
   i2cpwm_board__msg__ServoConfig temp_servo_config;
-  ServosConfig temp_servo_config_array;
+  //// ServosConfig temp_servo_config_array;
 #else
   i2cpwm_board::ServoConfig temp_servo_config;
   i2cpwm_board::ServosConfig temp_servo_config_array;
 #endif
 
   // Loop through servo configuration dictionary in smnc_, append servo to
-#ifdef ANTONIO
-  uint8_t j = 0;
-#endif
   for (std::map<std::string, std::map<std::string, float>>::iterator
        iter = smnc_.servo_config.begin();
        iter != smnc_.servo_config.end();
@@ -388,30 +364,28 @@ bool SpotMicroMotionCmd::publishServoConfiguration() {
 
 // Append to temp_servo_config_array
 #ifdef ANTONIO
-    temp_servo_config_array.request.servos[j++] = temp_servo_config;
+    i2cpwm_controller_config_servo(
+      temp_servo_config.servo, 
+      temp_servo_config.center, 
+      temp_servo_config.range, 
+      temp_servo_config.direction);
 #else
     temp_servo_config_array.request.servos.push_back(temp_servo_config);
 #endif
   }
 
 // call the client service, return true if succesfull, false if not
-#ifdef ANTONIO
-  if (1)
-#else
+#ifndef ANTONIO
   if (!servos_config_client_.call(temp_servo_config_array))
-#endif
   {
     if (!smnc_.debug_mode && !smnc_.run_standalone)
     {
       // Only error out if not in debug mode or standalone mode
-#ifdef ANTONIO
-      ESP_LOGE(TAG, "Failed to call service servo_config");
-#else
       ROS_ERROR("Failed to call service servo_config");
-#endif
       return false;
     }
   }
+#endif
 
   return true;
 }
@@ -442,7 +416,7 @@ void SpotMicroMotionCmd::setServoCommandMessageData() {
   servo_cmds_rad_["LB_3"] = joint_angs.left_back.ang3;
 
 #ifdef ANTONIO
-    printf("Antonio - RF degs %f, %f, %f\n", joint_angs.right_front.ang1 * 57.3, joint_angs.right_front.ang2 * 57.3, joint_angs.right_front.ang3 * 57.3);
+    //// printf("Antonio - RF degs %f, %f, %f\n", joint_angs.right_front.ang1 * 57.3, joint_angs.right_front.ang2 * 57.3, joint_angs.right_front.ang3 * 57.3);
 #endif
 
 }
