@@ -46,6 +46,7 @@ SpotMicroMotionCmd *motion;
 #include "https_ota.h"
 #endif
 
+static const char *TAG = "main";
 CRGBPalette16 currentPalette;
 TBlendType currentBlending;
 
@@ -390,7 +391,7 @@ void app_gpios(void)
 {
 
 	// Initialize GPIOs
-	printf("Initialize GPIOs\n");
+	ESP_LOGI(TAG, "Initialize GPIOs");
 	gpio_reset_pin(LED_GPIO);
 	gpio_set_direction(LED_GPIO, GPIO_MODE_OUTPUT);
 	gpio_reset_pin(RELAY_GPIO);
@@ -432,7 +433,7 @@ extern "C" void app_main(void)
 #endif
 
 	// Initializing OLED ...
-	printf("Initialize OLED\n");
+	ESP_LOGI(TAG, "Initialize OLED");
 	ssd1306();
 	xTaskCreate(&ssd1306_clear_task, "ssd1306_clear_task", 2048, NULL, 1, NULL);
 	vTaskDelay(500 / portTICK_PERIOD_MS);
@@ -441,7 +442,7 @@ extern "C" void app_main(void)
 	vTaskDelay(500 / portTICK_PERIOD_MS);
 
 #ifdef TEST_KINEMATICS
-	printf("Testing Kinematics!!\n");
+	ESP_LOGI(TAG, "Testing Kinematics!!");
 	// Initialize OLED
 	xTaskCreate((TaskFunction_t)&ssd1306_text_task, "ssd1306_display_text", 2048,
 				(void *)"Kinematics!!!   ", 1, NULL);
@@ -470,7 +471,7 @@ extern "C" void app_main(void)
 	RCCHECK(rclc_node_init_default(&node, "spotmicro_node", "", &support));
 
 	// Create timer
-	printf("Create spotmicro_timer\n");
+	ESP_LOGI(TAG, "Create spotmicro LED timer");
 	rcl_timer_t spotmicro_timer;
 	const unsigned int spotmicro_timer_timeout = 1000;
 	RCCHECK(rclc_timer_init_default(
@@ -480,7 +481,7 @@ extern "C" void app_main(void)
 		spotmicro_timer_callback));
 
 	// Create executor
-	printf("Create spotmicro_executors\n");
+	ESP_LOGI(TAG, "Create spotmicro_executors");
 	rclc_executor_t executor;
 	RCCHECK(rclc_executor_init(&executor, &support.context, 1 + SPOT_MICRO_MOTION_CMD_SUBSCRIBERS, &allocator));
 	RCCHECK(rclc_executor_add_timer(&executor, &spotmicro_timer));
@@ -500,7 +501,7 @@ extern "C" void app_main(void)
 			//// clock_gettime(CLOCK_REALTIME, &ts_begin);
 			motion->runOnce();
 			rclc_executor_spin_some(&executor, RCL_MS_TO_NS(100));
-			usleep((1000 / rate) * 1000     *     10);
+			usleep((1000 / rate) * 1000     *      1);
 			//// clock_gettime(CLOCK_REALTIME, &ts_end);
 			//// printf("Delta time is: %.02fms\n", ((float) (ts_end.tv_nsec - ts_begin.tv_nsec)) / (1000 * 1000));
 		}

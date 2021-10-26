@@ -13,7 +13,7 @@
 
 #define SDA_PIN GPIO_NUM_21
 #define SCL_PIN GPIO_NUM_22
-#define tag_oled "SSD1306"
+#define TAG "SSD1306"
 
 void ssd1306_i2c_master_init()
 {
@@ -50,11 +50,11 @@ void ssd1306_init()
 	espRc = i2c_master_cmd_begin(I2C_NUM_0, cmd, 10 / portTICK_PERIOD_MS);
 	if (espRc == ESP_OK)
 	{
-		ESP_LOGI(tag_oled, "OLED configured successfully");
+		ESP_LOGI(TAG, "OLED configured successfully");
 	}
 	else
 	{
-		ESP_LOGE(tag_oled, "OLED configuration failed. code: 0x%.2X", espRc);
+		ESP_LOGE(TAG, "OLED configuration failed. code: 0x%.2X", espRc);
 	}
 	i2c_cmd_link_delete(cmd);
 }
@@ -170,11 +170,11 @@ void ssd1306_scroll_task(void *ignore)
 	espRc = i2c_master_cmd_begin(I2C_NUM_0, cmd, 10 / portTICK_PERIOD_MS);
 	if (espRc == ESP_OK)
 	{
-		ESP_LOGI(tag_oled, "Scroll command succeeded");
+		ESP_LOGI(TAG, "Scroll command succeeded");
 	}
 	else
 	{
-		ESP_LOGE(tag_oled, "Scroll command failed. code: 0x%.2X", espRc);
+		ESP_LOGE(TAG, "Scroll command failed. code: 0x%.2X", espRc);
 	}
 
 	i2c_cmd_link_delete(cmd);
@@ -241,7 +241,7 @@ void ssd1306_text_task(const void *arg_text)
 
 void ssd1306(void)
 {
-	printf("Starting ssd1306()\n");
+	ESP_LOGI(TAG, "Starting ssd1306()");
 	ssd1306_i2c_master_init();
 	ssd1306_init();
 
