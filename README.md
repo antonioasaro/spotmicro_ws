@@ -1,4 +1,4 @@
-# Port of Mike's SpotMicro to ESP32 with ROS2 & micro_ros
+# Mike's SpotMicro for ESP32 with ROS2 & micro_ros
 
 ## Sources ...
 https://github.com/mike4192/spotMicro  
