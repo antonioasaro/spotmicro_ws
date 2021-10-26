@@ -42,7 +42,7 @@ using namespace Eigen;
 #ifndef ANTONIO
 using namespace geometry_msgs;
 #endif
-typedef std::vector<std::pair<std::string, std::string>> VectorStringPairs;
+typedef std::vector<std::pair<std::string,std::string>> VectorStringPairs;
 
 
 #ifdef ANTONIO
@@ -168,8 +168,7 @@ SpotMicroMotionCmd::SpotMicroMotionCmd(ros::NodeHandle &nh, ros::NodeHandle &pnh
   robot_odometry_.xyz_pos = {.x = 0.0f, .y = 0.0f, .z = 0.0f};
 
   // Initialize servo array message with 12 servo objects
-  for (int i = 1; i <= smnc_.num_servos; i++)
-  {
+  for (int i = 1; i <= smnc_.num_servos; i++) {
 #ifdef ANTONIO
     i2cpwm_board__msg__Servo temp_servo;
 #else
@@ -185,7 +184,7 @@ SpotMicroMotionCmd::SpotMicroMotionCmd(ros::NodeHandle &nh, ros::NodeHandle &pnh
   }
 
   // Initialize servo array absolute message with 12 servo object with a value of
-  // zero, just copy servo_array_msg since it's already correct
+  // zero, just copy servo_array_msg since it's already correct 
 #ifdef ANTONIO
   for (int i = 1; i <= smnc_.num_servos; i++)
   {
@@ -196,14 +195,14 @@ SpotMicroMotionCmd::SpotMicroMotionCmd(ros::NodeHandle &nh, ros::NodeHandle &pnh
 #endif
 
   // Initialize publishers and subscribers
-  // stand cmd event subscriber
+  // stand cmd event subscriber 
 #ifdef ANTONIO
   RCCHECK(rclc_subscription_init_default(&stand_cmd_subscriber, &nh, ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Bool), "/stand_cmd"));
   RCCHECK(rclc_executor_add_subscription(&executor, &stand_cmd_subscriber, &stand_cmd, &stand_cmd_subscription_callback, ON_NEW_DATA));
 #else
   stand_sub_ = nh.subscribe("/stand_cmd", 1, &SpotMicroMotionCmd::standCommandCallback, this);
 #endif
-
+    
   // idle cmd event subscriber
 #ifdef ANTONIO
   RCCHECK(rclc_subscription_init_default(&idle_cmd_subscriber, &nh, ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Bool), "/idle_cmd"));
@@ -244,9 +243,7 @@ SpotMicroMotionCmd::SpotMicroMotionCmd(ros::NodeHandle &nh, ros::NodeHandle &pnh
   RCCHECK(rclc_executor_add_subscription(&executor, &servos_proportional_subscriber, &servos_proportional_cmd, &servos_proportional_subscription_callback, ON_NEW_DATA));
 #else
   servos_proportional_pub_ = nh.advertise<i2cpwm_board::ServoArray>("servos_proportional",1);  
-#endif
-
-#ifndef ANTONIO
+  
   // Servos configuration publisher
   servos_config_client_ = nh.serviceClient<i2cpwm_board::ServosConfig>("config_servos");
 
@@ -374,13 +371,11 @@ bool SpotMicroMotionCmd::publishServoConfiguration() {
 #endif
   }
 
-// call the client service, return true if succesfull, false if not
 #ifndef ANTONIO
-  if (!servos_config_client_.call(temp_servo_config_array))
-  {
-    if (!smnc_.debug_mode && !smnc_.run_standalone)
-    {
-      // Only error out if not in debug mode or standalone mode
+  // call the client service, return true if succesfull, false if not
+  if (!servos_config_client_.call(temp_servo_config_array)) {
+    if (!smnc_.debug_mode && !smnc_.run_standalone) {
+      // Only error out if not in debug mode or standalone mode 
       ROS_ERROR("Failed to call service servo_config");
       return false;
     }
@@ -402,7 +397,7 @@ void SpotMicroMotionCmd::setServoCommandMessageData() {
   servo_cmds_rad_["RF_1"] = joint_angs.right_front.ang1;
   servo_cmds_rad_["RF_2"] = joint_angs.right_front.ang2;
   servo_cmds_rad_["RF_3"] = joint_angs.right_front.ang3;
-
+ 
   servo_cmds_rad_["RB_1"] = joint_angs.right_back.ang1;
   servo_cmds_rad_["RB_2"] = joint_angs.right_back.ang2;
   servo_cmds_rad_["RB_3"] = joint_angs.right_back.ang3;
@@ -444,24 +439,23 @@ void SpotMicroMotionCmd::publishServoProportionalCommand() {
       ESP_LOGW(TAG, "Joint %s, Angle: %1.2f", servo_name.c_str(), cmd_ang_rad * 180.0 / M_PI);
 #else
       ROS_WARN("Proportional Command above +1.0 was computed, clipped to 1.0");
-      ROS_WARN("Joint %s, Angle: %1.2f", servo_name.c_str(), cmd_ang_rad * 180.0 / M_PI);
+      ROS_WARN("Joint %s, Angle: %1.2f", servo_name.c_str(), cmd_ang_rad*180.0/M_PI);
 #endif
-    }
-    else if (servo_proportional_cmd < -1.0f)
-    {
+ 
+    } else if (servo_proportional_cmd < -1.0f) {
       servo_proportional_cmd = -1.0f;
 #ifdef ANTONIO
       ESP_LOGW(TAG, "Proportional Command below -1.0 was computed, clipped to -1.0");
       ESP_LOGW(TAG, "Joint %s, Angle: %1.2f", servo_name.c_str(), cmd_ang_rad * 180.0 / M_PI);
 #else
       ROS_WARN("Proportional Command below -1.0 was computed, clipped to -1.0");
-      ROS_WARN("Joint %s, Angle: %1.2f", servo_name.c_str(), cmd_ang_rad * 180.0 / M_PI);
+      ROS_WARN("Joint %s, Angle: %1.2f", servo_name.c_str(), cmd_ang_rad*180.0/M_PI);
 #endif
     }
-
-    servo_array_.servos[servo_num - 1].servo = servo_num;
-    servo_array_.servos[servo_num - 1].value = servo_proportional_cmd;
-  }
+ 
+    servo_array_.servos[servo_num-1].servo = servo_num;
+    servo_array_.servos[servo_num-1].value = servo_proportional_cmd; 
+ }
 
   // Publish message
 #ifdef ANTONIO
@@ -474,8 +468,8 @@ void SpotMicroMotionCmd::publishServoProportionalCommand() {
 #endif
 }
 
-void SpotMicroMotionCmd::publishZeroServoAbsoluteCommand()
-{
+
+void SpotMicroMotionCmd::publishZeroServoAbsoluteCommand() {
   // Publish the servo absolute message
 #ifdef ANTONIO
   servos_proportional_cmd.servos.size = 12;
@@ -587,7 +581,7 @@ void SpotMicroMotionCmd::readInConfigParameters() {
   pnh_.getParam("lidar_z_pos", smnc_.lidar_z_pos);
   pnh_.getParam("lidar_yaw_angle", smnc_.lidar_yaw_angle);
 #endif
-
+  
   // Derived parameters, round result of division of floats
   smnc_.overlap_ticks = round(smnc_.overlap_time / smnc_.dt);
   smnc_.swing_ticks = round(smnc_.swing_time / smnc_.dt);
@@ -626,8 +620,8 @@ void SpotMicroMotionCmd::readInConfigParameters() {
     pnh_.getParam(servo_name, temp_map); // Read the parameter. Parameter name must match servo name
     smnc_.servo_config[servo_name] = temp_map; // Assing in servo config to map in the struct
   }
-
 #endif
+  
 }
 
 
