@@ -198,7 +198,6 @@ SpotMicroMotionCmd::SpotMicroMotionCmd(ros::NodeHandle &nh, ros::NodeHandle &pnh
   // stand cmd event subscriber 
 #ifdef ANTONIO
   RCCHECK(rclc_subscription_init_default(&stand_cmd_subscriber, &nh, ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Bool), "/stand_cmd"));
-  RCCHECK(rclc_executor_add_subscription(&executor, &stand_cmd_subscriber, &stand_cmd, &stand_cmd_subscription_callback, ON_NEW_DATA));
 #else
   stand_sub_ = nh.subscribe("/stand_cmd", 1, &SpotMicroMotionCmd::standCommandCallback, this);
 #endif
@@ -206,7 +205,6 @@ SpotMicroMotionCmd::SpotMicroMotionCmd(ros::NodeHandle &nh, ros::NodeHandle &pnh
   // idle cmd event subscriber
 #ifdef ANTONIO
   RCCHECK(rclc_subscription_init_default(&idle_cmd_subscriber, &nh, ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Bool), "/idle_cmd"));
-  RCCHECK(rclc_executor_add_subscription(&executor, &idle_cmd_subscriber, &idle_cmd, &idle_cmd_subscription_callback, ON_NEW_DATA));
 #else
   idle_sub_ = nh.subscribe("/idle_cmd", 1, &SpotMicroMotionCmd::idleCommandCallback, this);
 #endif
@@ -214,7 +212,6 @@ SpotMicroMotionCmd::SpotMicroMotionCmd(ros::NodeHandle &nh, ros::NodeHandle &pnh
   // walk cmd event subscriber
 #ifdef ANTONIO
   RCCHECK(rclc_subscription_init_default(&walk_cmd_subscriber, &nh, ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Bool), "/walk_cmd"));
-  RCCHECK(rclc_executor_add_subscription(&executor, &walk_cmd_subscriber, &walk_cmd, &walk_cmd_subscription_callback, ON_NEW_DATA));
 #else
   walk_sub_ = nh.subscribe("/walk_cmd", 1, &SpotMicroMotionCmd::walkCommandCallback, this);
 #endif
@@ -230,8 +227,6 @@ SpotMicroMotionCmd::SpotMicroMotionCmd(ros::NodeHandle &nh, ros::NodeHandle &pnh
   // servos_absolute publisher
 #ifdef ANTONIO
 	RCCHECK(rclc_publisher_init_default(&servos_absolute_publisher, &nh,	ROSIDL_GET_MSG_TYPE_SUPPORT(i2cpwm_board, msg, ServoArray), "/servos_absolute"));
-  RCCHECK(rclc_subscription_init_default(&servos_absolute_subscriber, &nh, ROSIDL_GET_MSG_TYPE_SUPPORT(i2cpwm_board, msg, ServoArray), "/servos_absolute"));
-  RCCHECK(rclc_executor_add_subscription(&executor, &servos_absolute_subscriber, &servos_absolute_cmd, &servos_absolute_subscription_callback, ON_NEW_DATA));
 #else
   servos_absolute_pub_ = nh.advertise<i2cpwm_board::ServoArray>("servos_absolute", 1);
 #endif
@@ -239,8 +234,6 @@ SpotMicroMotionCmd::SpotMicroMotionCmd(ros::NodeHandle &nh, ros::NodeHandle &pnh
   // Servos proportional publisher
 #ifdef ANTONIO
 	RCCHECK(rclc_publisher_init_default(&servos_proportional_publisher, &nh,	ROSIDL_GET_MSG_TYPE_SUPPORT(i2cpwm_board, msg, ServoArray), "/servos_proportional"));
-  RCCHECK(rclc_subscription_init_default(&servos_proportional_subscriber, &nh, ROSIDL_GET_MSG_TYPE_SUPPORT(i2cpwm_board, msg, ServoArray), "/servos_proportional"));
-  RCCHECK(rclc_executor_add_subscription(&executor, &servos_proportional_subscriber, &servos_proportional_cmd, &servos_proportional_subscription_callback, ON_NEW_DATA));
 #else
   servos_proportional_pub_ = nh.advertise<i2cpwm_board::ServoArray>("servos_proportional",1);  
   
@@ -285,6 +278,17 @@ SpotMicroMotionCmd::SpotMicroMotionCmd(ros::NodeHandle &nh, ros::NodeHandle &pnh
       body_state_msg_.data.push_back(0.0f); 
     }
   }
+#endif
+
+#ifdef ANTONIO
+  RCCHECK(rclc_subscription_init_default(&servos_proportional_subscriber, &nh, ROSIDL_GET_MSG_TYPE_SUPPORT(i2cpwm_board, msg, ServoArray), "/servos_proportional"));
+  RCCHECK(rclc_subscription_init_default(&servos_absolute_subscriber, &nh, ROSIDL_GET_MSG_TYPE_SUPPORT(i2cpwm_board, msg, ServoArray), "/servos_absolute"));
+
+  RCCHECK(rclc_executor_add_subscription(&executor, &servos_proportional_subscriber, &servos_proportional_cmd, &servos_proportional_subscription_callback, ON_NEW_DATA));
+  RCCHECK(rclc_executor_add_subscription(&executor, &servos_absolute_subscriber, &servos_absolute_cmd, &servos_absolute_subscription_callback, ON_NEW_DATA));
+  RCCHECK(rclc_executor_add_subscription(&executor, &idle_cmd_subscriber, &idle_cmd, &idle_cmd_subscription_callback, ON_NEW_DATA));
+  RCCHECK(rclc_executor_add_subscription(&executor, &stand_cmd_subscriber, &stand_cmd, &stand_cmd_subscription_callback, ON_NEW_DATA));
+  RCCHECK(rclc_executor_add_subscription(&executor, &walk_cmd_subscriber, &walk_cmd, &walk_cmd_subscription_callback, ON_NEW_DATA));
 #endif
 
 #ifdef ANTONIO

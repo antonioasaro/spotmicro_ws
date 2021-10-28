@@ -191,18 +191,24 @@ extern "C" void app_main(void)
 	xTaskCreate((TaskFunction_t)&ssd1306_text_task, "ssd1306_display_text", 2048, (void *)"Initializing ...", 1, NULL);
 	vTaskDelay(500 / portTICK_PERIOD_MS);
 
+#define MPU6050_EN
+#ifdef MPU6050_EN
 	// Initializing mpu6050
 	ESP_LOGI(TAG, "Initialize MPU6050");
 	mpu6050();
 	xTaskCreate(&mpu6050_task, "mpu6050_task", 2048, NULL, 6, NULL);
 	vTaskDelay(500 / portTICK_PERIOD_MS);
+#endif
 
+#define WS2812B_EN
+#ifdef WS2812B_EN
 	// Start LEDs
 	ESP_LOGI(TAG, "Initialize WS2812B LED strip");
 	FastLED.addLeds<LED_TYPE, DATA_PIN>(leds, NUM_LEDS);
 	FastLED.setMaxPowerInVoltsAndMilliamps(5, 1000);
 	xTaskCreatePinnedToCore(&blink_task, "blink_task", 4000, NULL, 5, NULL, APP_CPU_NUM);
 	vTaskDelay(500 / portTICK_PERIOD_MS);
+#endif
 
 #ifdef UCLIENT_PROFILE_UDP
 	// Start the networking if required
@@ -233,40 +239,46 @@ extern "C" void app_main(void)
 	rcl_node_t node;
 	RCCHECK(rclc_node_init_default(&node, "spotmicro_node", "", &support));
 
+	// Create executor
+	ESP_LOGI(TAG, "Create spotmicro_executors");
+	rclc_executor_t executor;
+	RCCHECK(rclc_executor_init(&executor, &support.context, SPOT_MICRO_MOTION_CMD_SUBSCRIBERS + 1, &allocator));
+
+	// Initialize spot micro kinematics object of this class
+	ESP_LOGI(TAG, "Create SpotMicroMotionCmd object");
+	motion = new SpotMicroMotionCmd(node, executor);
+
 	// Create timer
 	ESP_LOGI(TAG, "Create spotmicro LED timer");
 	rcl_timer_t spotmicro_timer;
 	const unsigned int spotmicro_timer_timeout = 1000;
-	RCCHECK(rclc_timer_init_default(
-		&spotmicro_timer,
-		&support,
-		RCL_MS_TO_NS(spotmicro_timer_timeout),
-		spotmicro_timer_callback));
-
-	// Create executor
-	ESP_LOGI(TAG, "Create spotmicro_executors");
-	rclc_executor_t executor;
-	RCCHECK(rclc_executor_init(&executor, &support.context, 1 + SPOT_MICRO_MOTION_CMD_SUBSCRIBERS, &allocator));
+	RCCHECK(rclc_timer_init_default(&spotmicro_timer, &support,	RCL_MS_TO_NS(spotmicro_timer_timeout), spotmicro_timer_callback));
 	RCCHECK(rclc_executor_add_timer(&executor, &spotmicro_timer));
 
-	// Initialize spot micro kinematics object of this class
-	motion = new SpotMicroMotionCmd(node, executor);
 
+//// #define RATETIME_EN
+#ifdef RATETIME_EN
+		struct timespec ts_begin;
+		struct timespec ts_end;
+#endif
 	// Only proceed if servo configuration publishing succeeds
 	if (motion->publishServoConfiguration())
 	{
-		float rate = (1.0 / motion->getNodeConfig().dt); // Defing the looping rate
-
-		//// struct timespec ts_begin;
-		//// struct timespec ts_end;
+		float rate = (1.0 / motion->getNodeConfig().dt); // Define the looping rate
+		float sleep = (1000 / rate) * 1000 / 20;
 		while (1)
 		{
-			//// clock_gettime(CLOCK_REALTIME, &ts_begin);
+#ifdef RATETIME_EN			
+			clock_gettime(CLOCK_REALTIME, &ts_begin);
+#endif
 			motion->runOnce();
 			rclc_executor_spin_some(&executor, RCL_MS_TO_NS(100));
-			usleep((1000 / rate) * 1000 * 1);
-			//// clock_gettime(CLOCK_REALTIME, &ts_end);
-			//// printf("Delta time is: %.02fms\n", ((float) (ts_end.tv_nsec - ts_begin.tv_nsec)) / (1000 * 1000));
+#ifdef RATETIME_EN
+			clock_gettime(CLOCK_REALTIME, &ts_end);
+			float delta = ((float) (ts_end.tv_nsec - ts_begin.tv_nsec)) / (1000 * 1000);
+			if (delta > 33.0) printf("Delta time is: %.02fms with sleep of: %.02fms\n", delta, sleep / 1000);
+#endif
+			usleep(sleep);
 		}
 	}
 }
