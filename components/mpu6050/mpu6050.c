@@ -31,7 +31,7 @@
  * 0x48 MPU6050_GYRO_ZOUT_L
  */
 
-static char tag_mpu[] = "mpu6050";
+static char TAG[] = "MPU6050";
 short accel_x;
 short accel_y;
 short accel_z;
@@ -60,12 +60,12 @@ void mpu6050_i2c_master_init(void)
 	conf.master.clk_speed = 100000;
 	ESP_ERROR_CHECK(i2c_param_config(I2C_NUM_0, &conf));
 	ESP_ERROR_CHECK(i2c_driver_install(I2C_NUM_0, I2C_MODE_MASTER, 0, 0, 0));
-*/
+    */
 }
 
 void mpu6050_task(void *ignore)
 {
-	ESP_LOGD(tag_mpu, ">> mpu6050");
+	ESP_LOGI(TAG, "Sampling mpu6050 accel.xyz");
 
 	i2c_cmd_handle_t cmd;
 	vTaskDelay(200 / portTICK_PERIOD_MS);
@@ -119,9 +119,9 @@ void mpu6050_task(void *ignore)
 		accel_x = (data[0] << 8) | data[1];
 		accel_y = (data[2] << 8) | data[3];
 		accel_z = (data[4] << 8) | data[5];
-		ESP_LOGD(tag_mpu, "accel_x: %d, accel_y: %d, accel_z: %d", accel_x, accel_y, accel_z);
+		//// ESP_LOGI(TAG, "accel_x: %d, accel_y: %d, accel_z: %d", accel_x, accel_y, accel_z);
 
-		vTaskDelay(500 / portTICK_PERIOD_MS);
+		vTaskDelay(1000 / portTICK_PERIOD_MS);
 	}
 
 	vTaskDelete(NULL);
@@ -129,7 +129,7 @@ void mpu6050_task(void *ignore)
 
 void mpu6050(void)
 {
-	printf("Starting mpu6050()\n");
+	ESP_LOGI(TAG, "Starting mpu6050()");
 	mpu6050_i2c_master_init();
 	// xTaskCreate(&task_mpu6050, "mpu6050",  2048, NULL, 6, NULL);
 }

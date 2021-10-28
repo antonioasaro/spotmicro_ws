@@ -17,6 +17,7 @@
 
 void ssd1306_i2c_master_init()
 {
+	/*
 	i2c_config_t i2c_config = {
 		.mode = I2C_MODE_MASTER,
 		.sda_io_num = SDA_PIN,
@@ -26,6 +27,7 @@ void ssd1306_i2c_master_init()
 		.master.clk_speed = 1000000};
 	i2c_param_config(I2C_NUM_0, &i2c_config);
 	i2c_driver_install(I2C_NUM_0, I2C_MODE_MASTER, 0, 0, 0);
+	*/
 }
 
 void ssd1306_init()

@@ -1,5 +1,3 @@
-#define TEST_KINEMATICS
-
 #include <stdio.h>
 #include <stdint.h>
 #include <unistd.h>
@@ -33,57 +31,11 @@
 #include "FastLED.h"
 #include "FX.h"
 
-#ifdef TEST_KINEMATICS
 #include "spot_micro_motion_cmd.h"
 #include "spot_micro_kinematics/utils.h"
 #include "spot_micro_kinematics/spot_micro_kinematics.h"
-SpotMicroMotionCmd *motion;
-#endif
-
-#ifdef OTA_UPDATES
-#define FIRMWARE_VERSION 1.61
-#define UPDATE_JSON_URL "https://192.168.1.177:8070/spotmicro.json"
-#include "https_ota.h"
-#endif
-
-static const char *TAG = "main";
-CRGBPalette16 currentPalette;
-TBlendType currentBlending;
-
-extern CRGBPalette16 myRedWhiteBluePalette;
-extern const TProgmemPalette16 IRAM_ATTR myRedWhiteBluePalette_p;
-#include "palettes.h"
-
-//#define NUM_LEDS 512
-#define NUM_LEDS 15
-#define DATA_PIN 17
-#define LED_TYPE WS2812B
-
-CRGB leds[NUM_LEDS];
-
-#define N_COLORS 17
-static const CRGB colors[N_COLORS] = {
-	CRGB::Red,
-	CRGB::Green,
-	CRGB::Blue,
-	CRGB::White,
-	CRGB::AliceBlue,
-	CRGB::ForestGreen,
-	CRGB::Lavender,
-	CRGB::MistyRose,
-	CRGB::DarkOrchid,
-	CRGB::DarkOrange,
-	CRGB::Black,
-	CRGB::Teal,
-	CRGB::Violet,
-	CRGB::Lime,
-	CRGB::Chartreuse,
-	CRGB::BlueViolet,
-	CRGB::Aqua};
 
 #define LED_GPIO gpio_num_t(2)
-#define BUTTON_GPIO gpio_num_t(35)
-#define STRING_BUFFER_LEN 256
 #define RELAY_GPIO gpio_num_t(18)
 
 #define RCCHECK(fn)                                                                      \
@@ -120,187 +72,43 @@ static const CRGB colors[N_COLORS] = {
 #define SERVO_MIN 200 // (20ms / 4096 ticks) == 4.88 us * 200
 #define SERVO_MAX 400 // 4.88 us * 400
 
-rcl_publisher_t button_publisher;
-rcl_subscription_t cmd_vel_subscriber;
-rcl_subscription_t joy_subscriber;
-
+static const char *TAG = "main";
 static const i2c_port_t I2CPORT = 1;
-std_msgs__msg__Header outgoing_button;
-geometry_msgs__msg__Twist cmd_vel;
-sensor_msgs__msg__Joy joy;
-int32_t seq_no = 0;
-int32_t angle = 0;
-char all_stats[256];
-uint32_t buttonA;
-uint32_t buttonB;
-uint32_t buttonX;
-uint32_t buttonY;
+SpotMicroMotionCmd *motion;
 
-void publish_stats_task(void *pvParameters)
-{
+CRGBPalette16 currentPalette;
+TBlendType currentBlending;
 
-	while (1)
-	{
-		vTaskDelay(500 / portTICK_PERIOD_MS);
-		sprintf(all_stats, "Current stats:  \n\n  mpu_x = %hu\n  mpu_y = %hu\n  mpu_z = %hu\n\n A=%u B=%u X=%u Y=%u\n",
-				accel_x, accel_y, accel_z,
-				buttonA, buttonB, buttonX, buttonY);
-		xTaskCreate((TaskFunction_t)&ssd1306_text_task, "ssd1306_text_task", 2048,
-					(void *)all_stats, 6, NULL);
-	}
-}
+extern CRGBPalette16 myRedWhiteBluePalette;
+extern const TProgmemPalette16 IRAM_ATTR myRedWhiteBluePalette_p;
+#include "palettes.h"
 
-void timer_callback(rcl_timer_t *timer, int64_t last_call_time)
-{
+//#define NUM_LEDS 512
+#define NUM_LEDS 15
+#define DATA_PIN 17
+#define LED_TYPE WS2812B
 
-	RCLC_UNUSED(last_call_time);
-	if (timer != NULL)
-	{
-		gpio_set_level(LED_GPIO, seq_no++ & 0x1);
-		sprintf(outgoing_button.frame_id.data, ": %d", gpio_get_level(BUTTON_GPIO));
-		outgoing_button.frame_id.size = strlen(outgoing_button.frame_id.data);
+CRGB leds[NUM_LEDS];
 
-		// Fill the message timestamp
-		struct timespec ts;
-		clock_gettime(CLOCK_REALTIME, &ts);
-		outgoing_button.stamp.sec = ts.tv_sec;
-		outgoing_button.stamp.nanosec = ts.tv_nsec;
-
-		// Reset the pong count and publish the button message
-		RCCHECK(rcl_publish(&button_publisher, (const void *)&outgoing_button, NULL));
-		////		printf("Button send seq %s\n", outgoing_button.frame_id.data);
-	}
-};
-
-void cmd_vel_subscription_callback(const void *msgin)
-{
-
-	geometry_msgs__msg__Twist *msg = (geometry_msgs__msg__Twist *)msgin;
-	printf("Received keyboard: x = %f y = %f z = %f\n", msg->linear.x, msg->linear.y, msg->linear.z);
-	//printf("Received angular: x==%f y==%f z==%f\n", msg->angular.x, msg->angular.y, msg->angular.z);
-}
-
-void joy_subscription_callback(const void *msgin)
-{
-
-	sensor_msgs__msg__Joy *msg = (sensor_msgs__msg__Joy *)msgin;
-	buttonA = (uint32_t)msg->buttons.data[0];
-	buttonB = (uint32_t)msg->buttons.data[1];
-	buttonX = (uint32_t)msg->buttons.data[2];
-	buttonY = (uint32_t)msg->buttons.data[3];
-	//printf("Received joystick sec = %d\n", msg->header.stamp.sec);
-	//printf("Received joystick button A = %d\n", (uint32_t) msg->buttons.data[0]);
-}
-
-void micro_ros_task(void *arg)
-{
-
-	rcl_allocator_t allocator = rcl_get_default_allocator();
-	rclc_support_t support;
-
-	rcl_init_options_t init_options = rcl_get_zero_initialized_init_options();
-	RCCHECK(rcl_init_options_init(&init_options, allocator));
-	rmw_init_options_t *rmw_options = rcl_init_options_get_rmw_init_options(&init_options);
-
-	// Static Agent IP and port can be used instead of autodisvery.
-	RCCHECK(rmw_uros_options_set_udp_address(CONFIG_MICRO_ROS_AGENT_IP, CONFIG_MICRO_ROS_AGENT_PORT, rmw_options));
-	//RCCHECK(rmw_uros_discover_agent(rmw_options));
-
-	// Create init_options
-	RCCHECK(rclc_support_init_with_options(&support, 0, NULL, &init_options, &allocator));
-
-	// Create node
-	rcl_node_t node;
-	RCCHECK(rclc_node_init_default(&node, "spotmicro_node", "", &support));
-
-	// Create button publisher
-	printf("Create publisher\n");
-	RCCHECK(rclc_publisher_init_default(
-		&button_publisher,
-		&node,
-		ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Int32),
-		"/button"));
-
-	// Create cmd_vel subscriber
-	printf("Create cmd_vel subscriber\n");
-	RCCHECK(rclc_subscription_init_default(
-		&cmd_vel_subscriber,
-		&node,
-		ROSIDL_GET_MSG_TYPE_SUPPORT(geometry_msgs, msg, Twist),
-		"/cmd_vel"));
-
-	// Create joy subscriber
-	printf("Create joy subscriber\n");
-	RCCHECK(rclc_subscription_init_default(
-		&joy_subscriber,
-		&node,
-		ROSIDL_GET_MSG_TYPE_SUPPORT(sensor_msgs, msg, Joy),
-		"/joy"));
-
-	// Create timer
-	printf("Create timer\n");
-	rcl_timer_t timer;
-	const unsigned int timer_timeout = 1000;
-	RCCHECK(rclc_timer_init_default(
-		&timer,
-		&support,
-		RCL_MS_TO_NS(timer_timeout),
-		timer_callback));
-
-	// Initialize outgoing_button
-	printf("Initialize outgoing_button\n");
-	char outgoing_button_buffer[STRING_BUFFER_LEN];
-	outgoing_button.frame_id.data = outgoing_button_buffer;
-	outgoing_button.frame_id.capacity = STRING_BUFFER_LEN;
-
-	// Create executor
-	printf("Create executors\n");
-	rclc_executor_t executor;
-	RCCHECK(rclc_executor_init(&executor, &support.context, 3, &allocator));
-	RCCHECK(rclc_executor_add_timer(&executor, &timer));
-	RCCHECK(rclc_executor_add_subscription(&executor, &cmd_vel_subscriber, &cmd_vel, &cmd_vel_subscription_callback, ON_NEW_DATA));
-	RCCHECK(rclc_executor_add_subscription(&executor, &joy_subscriber, &joy, &joy_subscription_callback, ON_NEW_DATA));
-
-	float_t joy_axis[4];
-	int32_t joy_button[16];
-	joy.axes.capacity = 4;
-	joy.buttons.capacity = 16;
-	joy.axes.data = joy_axis;
-	joy.buttons.data = joy_button;
-
-	while (1)
-	{
-		rclc_executor_spin_some(&executor, RCL_MS_TO_NS(100));
-		usleep(10000);
-	}
-
-	// free resources
-	RCCHECK(rcl_publisher_fini(&button_publisher, &node));
-	RCCHECK(rcl_subscription_fini(&cmd_vel_subscriber, &node));
-	RCCHECK(rcl_subscription_fini(&joy_subscriber, &node));
-	RCCHECK(rcl_node_fini(&node));
-
-	vTaskDelete(NULL);
-}
-
-void blink_task(void *pvParameters)
-{
-
-	while (1)
-	{
-		for (int j = 0; j < N_COLORS; j++)
-		{
-			printf("Blink LEDs\n");
-
-			for (int i = 0; i < NUM_LEDS; i++)
-			{
-				leds[i] = colors[j];
-			}
-			FastLED.show();
-			vTaskDelay(200 / portTICK_PERIOD_MS);
-		};
-	}
-};
+#define N_COLORS 17
+static const CRGB colors[N_COLORS] = {
+	CRGB::Red,
+	CRGB::Green,
+	CRGB::Blue,
+	CRGB::White,
+	CRGB::AliceBlue,
+	CRGB::ForestGreen,
+	CRGB::Lavender,
+	CRGB::MistyRose,
+	CRGB::DarkOrchid,
+	CRGB::DarkOrange,
+	CRGB::Black,
+	CRGB::Teal,
+	CRGB::Violet,
+	CRGB::Lime,
+	CRGB::Chartreuse,
+	CRGB::BlueViolet,
+	CRGB::Aqua};
 
 #define N_COLORS_CHASE 5
 CRGB colors_chase[N_COLORS_CHASE] = {
@@ -310,116 +118,91 @@ CRGB colors_chase[N_COLORS_CHASE] = {
 	CRGB::DarkOrange,
 	CRGB::White};
 
-void chase_task(void *pvParameters)
+void blink_task(void *pvParameters)
 {
-	int pos = 0;
-	int led_color = 0;
-	while (1)
-	{
-		// do it the dumb way - blank the leds
-		for (int i = 0; i < NUM_LEDS; i++)
-		{
-			leds[i] = CRGB::Black;
-		}
-
-		// set the one LED to the right color
-		leds[pos] = colors_chase[led_color];
-		pos = (pos + 1) % NUM_LEDS;
-
-		// use a new color
-		if (pos == 0)
-		{
-			led_color = (led_color + 1) % N_COLORS_CHASE;
-		}
-
-		// uint64_t start = esp_timer_get_time();
-		FastLED.show();
-		// uint64_t end = esp_timer_get_time();
-		vTaskDelay(1000 / portTICK_PERIOD_MS);
-	};
-}
-
-void pca9685_task(void *pvParameters)
-{
-	i2c_dev_t dev;
-	uint16_t freq;
-	uint16_t val = SERVO_MIN;
-	uint16_t dir = 2;
-
-	memset(&dev, 0, sizeof(i2c_dev_t));
-	ESP_ERROR_CHECK(pca9685_init_desc(&dev, ADDR, I2CPORT, SDA_GPIO, SCL_GPIO));
-	ESP_ERROR_CHECK(pca9685_init(&dev));
-	ESP_ERROR_CHECK(pca9685_restart(&dev));
-	ESP_ERROR_CHECK(pca9685_set_pwm_frequency(&dev, PWM_FREQ_HZ));
-	ESP_ERROR_CHECK(pca9685_get_pwm_frequency(&dev, &freq));
-	ESP_LOGI("pca9685_task", "Freq %dHz, real %d", PWM_FREQ_HZ, freq);
-	for (uint32_t i = 0; i < 16; i++)
-	{
-		if (pca9685_set_pwm_value(&dev, 0, val) != ESP_OK)
-			ESP_LOGE("pca9685_task", "Could not set PWM value to ch%d", i);
-	}
-	gpio_set_level(RELAY_GPIO, 0);
-	vTaskDelay(250 / portTICK_PERIOD_MS);
 
 	while (1)
 	{
-		// ESP_LOGI("pca9685_task", "CH0 = %-4d", val);
-		if (pca9685_set_pwm_value(&dev, 0, val) != ESP_OK)
-			ESP_LOGE("pca9685_task", "Could not set PWM value to ch0");
-		if (val == 300)
+		for (int j = 0; j < N_COLORS; j++)
 		{
-			vTaskDelay(250 / portTICK_PERIOD_MS);
-		}
-
-		val = val + dir;
-		if (val >= SERVO_MAX)
-		{
-			dir = -2;
-		}
-		else
-		{
-			if (val <= SERVO_MIN)
+			for (int i = 0; i < NUM_LEDS; i++)
 			{
-				dir = 2;
+				leds[i] = colors[j];
 			}
-		}
-		vTaskDelay(4);
+			FastLED.show();
+			vTaskDelay(500 / portTICK_PERIOD_MS);
+		};
 	}
-}
-
-void app_gpios(void)
-{
-
-	// Initialize GPIOs
-	ESP_LOGI(TAG, "Initialize GPIOs");
-	gpio_reset_pin(LED_GPIO);
-	gpio_set_direction(LED_GPIO, GPIO_MODE_OUTPUT);
-	gpio_reset_pin(RELAY_GPIO);
-	gpio_set_level(RELAY_GPIO, 1);
-	gpio_set_direction(RELAY_GPIO, GPIO_MODE_OUTPUT);
-	gpio_pad_select_gpio(BUTTON_GPIO);
-	gpio_set_direction(BUTTON_GPIO, GPIO_MODE_INPUT);
-	vTaskDelay(500 / portTICK_PERIOD_MS);
-}
+};
 
 void spotmicro_timer_callback(rcl_timer_t *timer, int64_t last_call_time)
 {
+	static int8_t seq_no = 0;
 
 	RCLC_UNUSED(last_call_time);
 	if (timer != NULL)
 	{
 		gpio_set_level(LED_GPIO, seq_no++ & 0x1);
-		// motion->runOnce();
-		// node.runOnce();
-		// ros::spinOnce();
-		// rate.sleep()
 	}
 };
+
+void gpios_init(void)
+{
+
+	// Initialize GPIOs
+	gpio_reset_pin(LED_GPIO);
+	gpio_set_direction(LED_GPIO, GPIO_MODE_OUTPUT);
+	gpio_reset_pin(RELAY_GPIO);
+	gpio_set_level(RELAY_GPIO, 1);
+	gpio_set_direction(RELAY_GPIO, GPIO_MODE_OUTPUT);
+}
 
 extern "C" void app_main(void)
 {
 
-	app_gpios();
+	// Initializing GPIO pins ...
+	ESP_LOGI(TAG, "////////////////////");
+	ESP_LOGI(TAG, "Initialize GPIO pins");
+	gpios_init();
+
+	// Initializing i2cdev
+	ESP_LOGI(TAG, "Initialize i2cdev");
+	ESP_ERROR_CHECK(i2cdev_init());
+	vTaskDelay(500 / portTICK_PERIOD_MS);
+
+	// Initializing i2c_port_0 ...
+	ESP_LOGI(TAG, "Initialize I2C_PORT_0");
+	i2c_config_t conf;
+	conf.mode = I2C_MODE_MASTER;
+	conf.sda_io_num = GPIO_NUM_21;
+	conf.scl_io_num = GPIO_NUM_22;
+	conf.sda_pullup_en = GPIO_PULLUP_ENABLE;
+	conf.scl_pullup_en = GPIO_PULLUP_ENABLE;
+	conf.master.clk_speed = 100000;
+	ESP_ERROR_CHECK(i2c_param_config(I2C_NUM_0, &conf));
+	ESP_ERROR_CHECK(i2c_driver_install(I2C_NUM_0, I2C_MODE_MASTER, 0, 0, 0));
+	vTaskDelay(500 / portTICK_PERIOD_MS);
+
+	// Initializing OLED ...
+	ESP_LOGI(TAG, "Initialize OLED");
+	ssd1306();
+	xTaskCreate((TaskFunction_t)&ssd1306_clear_task, "ssd1306_clear_task", 2048, NULL, 1, NULL);
+	vTaskDelay(500 / portTICK_PERIOD_MS);
+	xTaskCreate((TaskFunction_t)&ssd1306_text_task, "ssd1306_display_text", 2048, (void *)"Initializing ...", 1, NULL);
+	vTaskDelay(500 / portTICK_PERIOD_MS);
+
+	// Initializing mpu6050
+	ESP_LOGI(TAG, "Initialize MPU6050");
+	mpu6050();
+	xTaskCreate(&mpu6050_task, "mpu6050_task", 2048, NULL, 6, NULL);
+	vTaskDelay(500 / portTICK_PERIOD_MS);
+
+	// Start LEDs
+	ESP_LOGI(TAG, "Initialize WS2812B LED strip");
+	FastLED.addLeds<LED_TYPE, DATA_PIN>(leds, NUM_LEDS);
+	FastLED.setMaxPowerInVoltsAndMilliamps(5, 1000);
+	xTaskCreatePinnedToCore(&blink_task, "blink_task", 4000, NULL, 5, NULL, APP_CPU_NUM);
+	vTaskDelay(500 / portTICK_PERIOD_MS);
 
 #ifdef UCLIENT_PROFILE_UDP
 	// Start the networking if required
@@ -427,29 +210,9 @@ extern "C" void app_main(void)
 	ESP_ERROR_CHECK(uros_network_interface_initialize());
 #endif // UCLIENT_PROFILE_UDP
 
-#ifdef OTA_UPDATES
-	// Check for OTA firmware update
-	https_ota();
-#endif
-
-	// Initializing OLED ...
-	ESP_LOGI(TAG, "Initialize OLED");
-	ssd1306();
-	xTaskCreate(&ssd1306_clear_task, "ssd1306_clear_task", 2048, NULL, 1, NULL);
-	vTaskDelay(500 / portTICK_PERIOD_MS);
-	xTaskCreate((TaskFunction_t)&ssd1306_text_task, "ssd1306_display_text", 2048,
-				(void *)"Initializing ...", 1, NULL);
-	vTaskDelay(500 / portTICK_PERIOD_MS);
-
-#ifdef TEST_KINEMATICS
-	ESP_LOGI(TAG, "Testing Kinematics!!");
 	// Initialize OLED
-	xTaskCreate((TaskFunction_t)&ssd1306_text_task, "ssd1306_display_text", 2048,
-				(void *)"Kinematics!!!   ", 1, NULL);
-	vTaskDelay(500 / portTICK_PERIOD_MS);
-
-	// Initialize i2cdev 
-	ESP_ERROR_CHECK(i2cdev_init());
+	ESP_LOGI(TAG, "Testing Kinematics!!");
+	xTaskCreate((TaskFunction_t)&ssd1306_text_task, "ssd1306_display_text", 2048, (void *)"Kinematics!!!   ", 1, NULL);
 	vTaskDelay(500 / portTICK_PERIOD_MS);
 
 	rcl_allocator_t allocator = rcl_get_default_allocator();
@@ -501,36 +264,9 @@ extern "C" void app_main(void)
 			//// clock_gettime(CLOCK_REALTIME, &ts_begin);
 			motion->runOnce();
 			rclc_executor_spin_some(&executor, RCL_MS_TO_NS(100));
-			usleep((1000 / rate) * 1000     *      1);
+			usleep((1000 / rate) * 1000 * 1);
 			//// clock_gettime(CLOCK_REALTIME, &ts_end);
 			//// printf("Delta time is: %.02fms\n", ((float) (ts_end.tv_nsec - ts_begin.tv_nsec)) / (1000 * 1000));
 		}
 	}
-#else
-	// Initializing mpu6050
-	printf("Initialize MPU6050\n");
-	mpu6050();
-	xTaskCreate(&publish_stats_task, "publish_stats_task", 2048, NULL, 1, NULL);
-	xTaskCreate(&mpu6050_task, "mpu6050_task", 2048, NULL, 6, NULL);
-
-	// Start LEDs
-	vTaskDelay(100 / portTICK_PERIOD_MS);
-	FastLED.addLeds<LED_TYPE, DATA_PIN>(leds, NUM_LEDS);
-	FastLED.setMaxPowerInVoltsAndMilliamps(5, 1000);
-	//xTaskCreatePinnedToCore(&blink_task, "blink_task", 4000, NULL, 5, NULL, APP_CPU_NUM);
-	xTaskCreatePinnedToCore(&chase_task, "chase_task", 4000, NULL, 5, NULL, APP_CPU_NUM);
-
-	// Start SERVOs
-	vTaskDelay(100 / portTICK_PERIOD_MS);
-	ESP_ERROR_CHECK(i2cdev_init());
-	xTaskCreatePinnedToCore(pca9685_task, "pca9685_task", configMINIMAL_STACK_SIZE * 3, NULL, 5, NULL, APP_CPU_NUM);
-
-	// Pin micro-ros task in APP_CPU to make PRO_CPU to deal with wifi:
-	xTaskCreate(micro_ros_task,
-				"micro_task",
-				CONFIG_MICRO_ROS_APP_STACK,
-				NULL,
-				CONFIG_MICRO_ROS_APP_TASK_PRIO,
-				NULL);
-#endif
 }

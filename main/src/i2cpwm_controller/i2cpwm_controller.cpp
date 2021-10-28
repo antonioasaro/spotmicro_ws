@@ -34,7 +34,7 @@ void i2cpwm_controller_init()
 {
     uint16_t freq;
 
-    ESP_LOGI(TAG, "i2cpwm_controller_init()");
+    ESP_LOGI(TAG, "Initialize I2C_PORT_1");
     memset(&dev, 0, sizeof(i2c_dev_t));
     ESP_ERROR_CHECK(pca9685_init_desc(&dev, ADDR, I2CPORT, SDA_GPIO, SCL_GPIO));
     ESP_ERROR_CHECK(pca9685_init(&dev));
