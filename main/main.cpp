@@ -148,8 +148,7 @@ void servo_calibration_task(void *pvParameters)
 		if (pca9685_set_pwm_value(&dev, chan, val) != ESP_OK)
 			ESP_LOGE("servo_calibration_task", "Could not set PWM value to ch0");
 		if (val == SERVO_MED)
-
-			vTaskDelay(1000 / portTICK_PERIOD_MS);
+			vTaskDelay(5000 / portTICK_PERIOD_MS);
 		val = val + dir;
 		if (val >= SERVO_MAX)
 			dir = -2;
