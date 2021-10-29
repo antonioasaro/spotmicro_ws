@@ -43,7 +43,7 @@ void i2cpwm_controller_init()
     ESP_ERROR_CHECK(pca9685_get_pwm_frequency(&dev, &freq));
     for (uint32_t i = 0; i < 16; i++)
     {
-        if (pca9685_set_pwm_value(&dev, 0, 0) != ESP_OK)
+        if (pca9685_set_pwm_value(&dev, i, 0) != ESP_OK)
             ESP_LOGE(TAG, "Could not set PWM value on ch%d", i);
     }
     usleep(1000);

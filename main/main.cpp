@@ -68,9 +68,6 @@
 #ifndef APP_CPU_NUM
 #define APP_CPU_NUM PRO_CPU_NUM
 #endif
-#define PWM_FREQ_HZ 50
-#define SERVO_MIN 200 // (20ms / 4096 ticks) == 4.88 us * 200
-#define SERVO_MAX 400 // 4.88 us * 400
 
 static const char *TAG = "main";
 static const i2c_port_t I2CPORT = 1;
@@ -117,6 +114,57 @@ CRGB colors_chase[N_COLORS_CHASE] = {
 	CRGB::Blue,
 	CRGB::DarkOrange,
 	CRGB::White};
+
+#define PWM_FREQ_HZ 50 // (20ms / 4096 ticks) == 4.88 us
+#define SERVO_MED 306
+#define SERVO_RANGE 380
+#define SERVO_MIN (SERVO_MED - (SERVO_RANGE / 2))
+#define SERVO_MAX (SERVO_MED + (SERVO_RANGE / 2))
+void servo_calibration_task(void *pvParameters)
+{
+	i2c_dev_t dev;
+	uint16_t freq;
+	uint16_t chan = 0;
+	uint16_t val = SERVO_MED;
+	uint16_t dir = 2;
+
+	memset(&dev, 0, sizeof(i2c_dev_t));
+	ESP_ERROR_CHECK(pca9685_init_desc(&dev, ADDR, I2CPORT, SDA_GPIO, SCL_GPIO));
+	ESP_ERROR_CHECK(pca9685_init(&dev));
+	ESP_ERROR_CHECK(pca9685_restart(&dev));
+	ESP_ERROR_CHECK(pca9685_set_pwm_frequency(&dev, PWM_FREQ_HZ));
+	ESP_ERROR_CHECK(pca9685_get_pwm_frequency(&dev, &freq));
+	for (uint32_t i = 0; i < 16; i++)
+	{
+		if (pca9685_set_pwm_value(&dev, i, val) != ESP_OK)
+			ESP_LOGE("servo_calibration_task", "Could not set PWM value to ch%d", i);
+	}
+	vTaskDelay(500 / portTICK_PERIOD_MS);
+	gpio_set_level(RELAY_GPIO, 0);
+
+	while (1)
+	{
+		ESP_LOGI("servo_calibration_task", "CH%d = %-4d", chan, val);
+		if (pca9685_set_pwm_value(&dev, chan, val) != ESP_OK)
+			ESP_LOGE("servo_calibration_task", "Could not set PWM value to ch0");
+		if (val == SERVO_MED)
+
+			vTaskDelay(1000 / portTICK_PERIOD_MS);
+		val = val + dir;
+		if (val >= SERVO_MAX)
+			dir = -2;
+		else
+		{
+			if (val <= SERVO_MIN)
+			{
+				dir = 2;
+				chan = (chan + 1) % 1;
+				vTaskDelay(500 / portTICK_PERIOD_MS);
+			}
+		}
+		vTaskDelay(10);
+	}
+}
 
 void blink_task(void *pvParameters)
 {
@@ -168,8 +216,13 @@ extern "C" void app_main(void)
 	// Initializing i2cdev
 	ESP_LOGI(TAG, "Initialize i2cdev");
 	ESP_ERROR_CHECK(i2cdev_init());
-	vTaskDelay(500 / portTICK_PERIOD_MS);
+	vTaskDelay(1000 / portTICK_PERIOD_MS);
 
+#define SERVO_CALIBRATION
+#ifdef SERVO_CALIBRATION
+	ESP_LOGI(TAG, "Calibrate SERVOs");
+	xTaskCreatePinnedToCore(servo_calibration_task, "servo_calibration", configMINIMAL_STACK_SIZE * 3, NULL, 5, NULL, APP_CPU_NUM);
+#else
 	// Initializing i2c_port_0 ...
 	ESP_LOGI(TAG, "Initialize I2C_PORT_0");
 	i2c_config_t conf;
@@ -252,14 +305,13 @@ extern "C" void app_main(void)
 	ESP_LOGI(TAG, "Create spotmicro LED timer");
 	rcl_timer_t spotmicro_timer;
 	const unsigned int spotmicro_timer_timeout = 1000;
-	RCCHECK(rclc_timer_init_default(&spotmicro_timer, &support,	RCL_MS_TO_NS(spotmicro_timer_timeout), spotmicro_timer_callback));
+	RCCHECK(rclc_timer_init_default(&spotmicro_timer, &support, RCL_MS_TO_NS(spotmicro_timer_timeout), spotmicro_timer_callback));
 	RCCHECK(rclc_executor_add_timer(&executor, &spotmicro_timer));
-
 
 //// #define RATETIME_EN
 #ifdef RATETIME_EN
-		struct timespec ts_begin;
-		struct timespec ts_end;
+	struct timespec ts_begin;
+	struct timespec ts_end;
 #endif
 	// Only proceed if servo configuration publishing succeeds
 	if (motion->publishServoConfiguration())
@@ -268,17 +320,19 @@ extern "C" void app_main(void)
 		float sleep = (1000 / rate) * 1000 / 20;
 		while (1)
 		{
-#ifdef RATETIME_EN			
+#ifdef RATETIME_EN
 			clock_gettime(CLOCK_REALTIME, &ts_begin);
 #endif
 			motion->runOnce();
 			rclc_executor_spin_some(&executor, RCL_MS_TO_NS(100));
 #ifdef RATETIME_EN
 			clock_gettime(CLOCK_REALTIME, &ts_end);
-			float delta = ((float) (ts_end.tv_nsec - ts_begin.tv_nsec)) / (1000 * 1000);
-			if (delta > 33.0) printf("Delta time is: %.02fms with sleep of: %.02fms\n", delta, sleep / 1000);
+			float delta = ((float)(ts_end.tv_nsec - ts_begin.tv_nsec)) / (1000 * 1000);
+			if (delta > 33.0)
+				printf("Delta time is: %.02fms with sleep of: %.02fms\n", delta, sleep / 1000);
 #endif
 			usleep(sleep);
 		}
 	}
+#endif
 }
