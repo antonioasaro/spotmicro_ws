@@ -117,7 +117,7 @@ CRGB colors_chase[N_COLORS_CHASE] = {
 
 #define PWM_FREQ_HZ 50 // (20ms / 4096 ticks) == 4.88 us
 #define SERVO_MED 306
-#define SERVO_RANGE 40 // 380
+#define SERVO_RANGE 360 // 80 or 380
 #define SERVO_MIN (SERVO_MED - (SERVO_RANGE / 2))
 #define SERVO_MAX (SERVO_MED + (SERVO_RANGE / 2))
 void servo_calibration_task(void *pvParameters)
@@ -136,10 +136,11 @@ void servo_calibration_task(void *pvParameters)
 	ESP_ERROR_CHECK(pca9685_get_pwm_frequency(&dev, &freq));
 	for (uint32_t i = 0; i < 16; i++)
 	{
-		if (pca9685_set_pwm_value(&dev, i, val) != ESP_OK)
+		if (pca9685_set_pwm_value(&dev, i, 0) != ESP_OK)
 			ESP_LOGE("servo_calibration_task", "Could not set PWM value to ch%d", i);
 	}
-	vTaskDelay(500 / portTICK_PERIOD_MS);
+	ESP_LOGI(TAG, "Servo calibration initialize to OFF");
+	vTaskDelay(2000 / portTICK_PERIOD_MS);
 	gpio_set_level(RELAY_GPIO, 0);
 
 	bool once = false;

@@ -109,6 +109,7 @@ void servos_absolute_subscription_callback(const void *msgin)
 {
 
   i2cpwm_board__msg__ServoArray *msg = (i2cpwm_board__msg__ServoArray *)msgin;
+  //// printf("Received servos_absolute_cmd\n");
   i2cpwm_controller_servos_absolute(msg);
 }
 
