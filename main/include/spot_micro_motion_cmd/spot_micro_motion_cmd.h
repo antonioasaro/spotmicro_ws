@@ -4,7 +4,7 @@
 
 #define ANTONIO
 #ifdef ANTONIO
-#define SPOT_MICRO_MOTION_CMD_SUBSCRIBERS 5
+#define SPOT_MICRO_MOTION_CMD_SUBSCRIBERS 6
 #include "std_msgs/msg/bool.h"
 #include "std_msgs/msg/string.h"
 #include "geometry_msgs/msg/vector3.h"
@@ -146,6 +146,9 @@ class SpotMicroMotionCmd
 
   // Callback method for walk command
   void walkCommandCallback(const std_msgs__msg__Bool *msg);
+
+  // Callback method for cali command
+  void caliCommandCallback(const std_msgs__msg__Bool *msg);
 
   // Callback method for angle command
   void angleCommandCallback(const geometry_msgs__msg__Vector3 *msg);

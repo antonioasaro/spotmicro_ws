@@ -221,7 +221,7 @@ extern "C" void app_main(void)
 	ESP_ERROR_CHECK(i2cdev_init());
 	vTaskDelay(1000 / portTICK_PERIOD_MS);
 
-#define SERVO_CALIBRATION
+//// #define SERVO_CALIBRATION
 #ifdef SERVO_CALIBRATION
 	ESP_LOGI(TAG, "Calibrate SERVOs");
 	xTaskCreatePinnedToCore(servo_calibration_task, "servo_calibration", configMINIMAL_STACK_SIZE * 3, NULL, 5, NULL, APP_CPU_NUM);
@@ -247,7 +247,7 @@ extern "C" void app_main(void)
 	xTaskCreate((TaskFunction_t)&ssd1306_text_task, "ssd1306_display_text", 2048, (void *)"Initializing ...", 1, NULL);
 	vTaskDelay(500 / portTICK_PERIOD_MS);
 
-#define MPU6050_EN
+//// #define MPU6050_EN
 #ifdef MPU6050_EN
 	// Initializing mpu6050
 	ESP_LOGI(TAG, "Initialize MPU6050");

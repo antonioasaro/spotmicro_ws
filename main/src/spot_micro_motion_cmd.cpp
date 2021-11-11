@@ -67,9 +67,11 @@ typedef std::vector<std::pair<std::string,std::string>> VectorStringPairs;
 rcl_subscription_t idle_cmd_subscriber;
 rcl_subscription_t stand_cmd_subscriber;
 rcl_subscription_t walk_cmd_subscriber;
+rcl_subscription_t cali_cmd_subscriber;
 std_msgs__msg__Bool idle_cmd;
 std_msgs__msg__Bool stand_cmd;
 std_msgs__msg__Bool walk_cmd;
+std_msgs__msg__Bool cali_cmd;
 extern SpotMicroMotionCmd *motion;
 static const char *TAG = "SpotMicroMotionCmd";
 
@@ -103,6 +105,14 @@ void walk_cmd_subscription_callback(const void *msgin)
   std_msgs__msg__Bool *msg = (std_msgs__msg__Bool *)msgin;
   printf("Received keyboard walk - %d\n", msg->data);
   motion->walkCommandCallback(msg);
+}
+
+void cali_cmd_subscription_callback(const void *msgin)
+{
+
+  std_msgs__msg__Bool *msg = (std_msgs__msg__Bool *)msgin;
+  printf("Received keyboard cali - %d\n", msg->data);
+  motion->caliCommandCallback(msg);
 }
 
 void servos_absolute_subscription_callback(const void *msgin)
@@ -217,6 +227,10 @@ SpotMicroMotionCmd::SpotMicroMotionCmd(ros::NodeHandle &nh, ros::NodeHandle &pnh
   walk_sub_ = nh.subscribe("/walk_cmd", 1, &SpotMicroMotionCmd::walkCommandCallback, this);
 #endif
 
+#ifdef ANTONIO
+  RCCHECK(rclc_subscription_init_default(&cali_cmd_subscriber, &nh, ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Bool), "/cali_cmd"));
+#endif
+
   // body angle command subscriber
 #ifndef ANTONIO
   body_angle_cmd_sub_ = nh.subscribe("/angle_cmd", 1, &SpotMicroMotionCmd::angleCommandCallback, this);  
@@ -290,6 +304,7 @@ SpotMicroMotionCmd::SpotMicroMotionCmd(ros::NodeHandle &nh, ros::NodeHandle &pnh
   RCCHECK(rclc_executor_add_subscription(&executor, &idle_cmd_subscriber, &idle_cmd, &idle_cmd_subscription_callback, ON_NEW_DATA));
   RCCHECK(rclc_executor_add_subscription(&executor, &stand_cmd_subscriber, &stand_cmd, &stand_cmd_subscription_callback, ON_NEW_DATA));
   RCCHECK(rclc_executor_add_subscription(&executor, &walk_cmd_subscriber, &walk_cmd, &walk_cmd_subscription_callback, ON_NEW_DATA));
+  RCCHECK(rclc_executor_add_subscription(&executor, &cali_cmd_subscriber, &cali_cmd, &cali_cmd_subscription_callback, ON_NEW_DATA));
 #endif
 
 #ifdef ANTONIO
@@ -659,6 +674,12 @@ void SpotMicroMotionCmd::walkCommandCallback(
   if (msg->data == true) {cmd_.walk_cmd_ = true;}
 }
 
+#ifdef ANTONIO
+void SpotMicroMotionCmd::caliCommandCallback(
+    const std_msgs__msg__Bool *msg) {
+  if (msg->data == true) {cmd_.cali_cmd_ = true;}
+}
+#endif
 
 void SpotMicroMotionCmd::angleCommandCallback(
 #ifdef ANTONIO

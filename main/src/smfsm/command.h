@@ -22,6 +22,9 @@ class Command {
   bool idle_cmd_;
   bool walk_cmd_;
   bool stand_cmd_;
+#ifdef ANTONIO
+  bool cali_cmd_;
+#endif
  
   // Constructor
   Command()
@@ -34,6 +37,9 @@ class Command {
       , idle_cmd_(false)
       , walk_cmd_(false)
       , stand_cmd_(false)
+#ifdef ANTONIO
+      , cali_cmd_(false)
+#endif
       { }
 
   bool getStandCmd() const {
@@ -49,6 +55,12 @@ class Command {
      return walk_cmd_;
   } 
  
+ #ifdef ANTONIO
+  bool getCaliCmd() const {
+     return cali_cmd_;
+  } 
+ #endif
+
   float getXSpeedCmd() const {
     return x_vel_cmd_mps_;
   }

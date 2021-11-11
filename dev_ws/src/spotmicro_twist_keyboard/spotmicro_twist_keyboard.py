@@ -20,6 +20,7 @@ walk: Start walk mode and keyboard motion control
 stand: Stand robot up
 idle: Lay robot down
 angle_cmd: enter angle control mode
+cali: calibrate servos
 
 Keyboard commands for body motion 
 ---------------------------
@@ -41,7 +42,7 @@ Keyboard commands for body motion
 
 CTRL-C to quit
 """
-valid_cmds = ('quit','Quit','walk','stand','idle', 'angle_cmd')
+valid_cmds = ('quit','Quit','walk','stand','idle','angle_cmd','cali')
 
 # Global body motion increment values
 speed_inc = 0.02
@@ -73,6 +74,9 @@ class SpotMicroKeyboardControl():
         self._idle_event_cmd_msg = Bool()
         self._idle_event_cmd_msg.data = True
 
+        self._cali_event_cmd_msg = Bool()
+        self._cali_event_cmd_msg.data = True
+
         # Set up and title the ros node for this code
         rclpy.init(args=sys.argv)
         global node
@@ -85,6 +89,7 @@ class SpotMicroKeyboardControl():
         self._ros_pub_walk_cmd       = node.create_publisher(Bool, '/walk_cmd', 10)
         self._ros_pub_stand_cmd      = node.create_publisher(Bool, '/stand_cmd', 10)
         self._ros_pub_idle_cmd       = node.create_publisher(Bool, '/idle_cmd', 10)
+        self._ros_pub_cali_cmd       = node.create_publisher(Bool, '/cali_cmd', 10)
 
         node.get_logger().info("Keyboard control node publishers corrrectly initialized")
 
@@ -148,6 +153,11 @@ class SpotMicroKeyboardControl():
                     #Publish idle command event
                     self._ros_pub_idle_cmd.publish(self._idle_event_cmd_msg)
                     node.get_logger().info('Idle command issued from keyboard.')
+
+                elif userInput == 'cali':
+                    #Publish cali command event
+                    self._ros_pub_cali_cmd.publish(self._cali_event_cmd_msg)
+                    node.get_logger().info('Cali command issued from keyboard.')
 
                 elif userInput == 'angle_cmd':
                     # Reset all angle commands

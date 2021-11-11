@@ -1,6 +1,10 @@
+#define ANTONIO
 #include "spot_micro_idle.h"
 #include "spot_micro_motion_cmd.h"
 #include "spot_micro_transition_stand.h"
+#ifdef ANTONIO
+#include "spot_micro_cali.h"
+#endif
 
 SpotMicroIdleState::SpotMicroIdleState() {
   // Construcotr, doesn't need to do anything, for now...
@@ -25,6 +29,11 @@ void SpotMicroIdleState::handleInputCommands(const smk::BodyState& body_state,
     changeState(smmc, std::make_unique<SpotMicroTransitionStandState>());
   
   } else {
+#ifdef ANTONIO
+      if (cmd.getCaliCmd() == true) 
+          changeState(smmc, std::make_unique<SpotMicroCaliState>());
+      else
+#endif    
     // Otherwise, just command idle servo commands
     smmc->publishZeroServoAbsoluteCommand();
   }
