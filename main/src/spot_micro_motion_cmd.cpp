@@ -13,6 +13,7 @@
 #include "geometry_msgs/msg/vector3.h"
 #include "geometry_msgs/msg/twist.h"
 #include "i2cpwm_controller/i2cpwm_controller.h"
+#include "ssd1306.h"
 #else
 #include "std_msgs/Float32.h"
 #include "std_msgs/Bool.h"
@@ -85,33 +86,37 @@ i2cpwm_board__msg__ServoArray servos_proportional_cmd;
 
 void idle_cmd_subscription_callback(const void *msgin)
 {
-
   std_msgs__msg__Bool *msg = (std_msgs__msg__Bool *)msgin;
-  printf("Received keyboard idle - %d\n", msg->data);
+  ESP_LOGI(TAG, "Received idle cmd");
+  xTaskCreate((TaskFunction_t)&ssd1306_text_task, "ssd1306_display_text", 2048, (void *)"Idling!!        ", 1, NULL);
+	vTaskDelay(500 / portTICK_PERIOD_MS);
   motion->idleCommandCallback(msg);
 }
 
 void stand_cmd_subscription_callback(const void *msgin)
 {
-
   std_msgs__msg__Bool *msg = (std_msgs__msg__Bool *)msgin;
-  printf("Received keyboard stand - %d\n", msg->data);
+  ESP_LOGI(TAG, "Received stand cmd");
+  xTaskCreate((TaskFunction_t)&ssd1306_text_task, "ssd1306_display_text", 2048, (void *)"Standing!!      ", 1, NULL);
+	vTaskDelay(500 / portTICK_PERIOD_MS);
   motion->standCommandCallback(msg);
 }
 
 void walk_cmd_subscription_callback(const void *msgin)
 {
-
   std_msgs__msg__Bool *msg = (std_msgs__msg__Bool *)msgin;
-  printf("Received keyboard walk - %d\n", msg->data);
+  ESP_LOGI(TAG, "Received walk cmd");
+  xTaskCreate((TaskFunction_t)&ssd1306_text_task, "ssd1306_display_text", 2048, (void *)"Walking!!       ", 1, NULL);
+	vTaskDelay(500 / portTICK_PERIOD_MS);
   motion->walkCommandCallback(msg);
 }
 
 void cali_cmd_subscription_callback(const void *msgin)
 {
-
   std_msgs__msg__Bool *msg = (std_msgs__msg__Bool *)msgin;
-  printf("Received keyboard cali - %d\n", msg->data);
+  ESP_LOGI(TAG, "Received calibrate cmd");
+  xTaskCreate((TaskFunction_t)&ssd1306_text_task, "ssd1306_display_text", 2048, (void *)"Calibrating!!   ", 1, NULL);
+	vTaskDelay(500 / portTICK_PERIOD_MS);
   motion->caliCommandCallback(msg);
 }
 

@@ -99,5 +99,8 @@ class Command {
     idle_cmd_ = false;
     walk_cmd_ = false;
     stand_cmd_ = false;
+#ifdef ANTONIO
+    cali_cmd_ = false;
+#endif
   }
 };

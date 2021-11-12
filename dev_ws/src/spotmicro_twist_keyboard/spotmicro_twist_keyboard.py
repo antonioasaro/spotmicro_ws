@@ -20,7 +20,7 @@ walk: Start walk mode and keyboard motion control
 stand: Stand robot up
 idle: Lay robot down
 angle_cmd: enter angle control mode
-cali: calibrate servos
+calibrate: calibrate servos
 
 Keyboard commands for body motion 
 ---------------------------
@@ -42,7 +42,7 @@ Keyboard commands for body motion
 
 CTRL-C to quit
 """
-valid_cmds = ('quit','Quit','walk','stand','idle','angle_cmd','cali')
+valid_cmds = ('quit','Quit','walk','stand','idle','angle_cmd','calibrate')
 
 # Global body motion increment values
 speed_inc = 0.02
@@ -154,7 +154,7 @@ class SpotMicroKeyboardControl():
                     self._ros_pub_idle_cmd.publish(self._idle_event_cmd_msg)
                     node.get_logger().info('Idle command issued from keyboard.')
 
-                elif userInput == 'cali':
+                elif userInput == 'calibrate':
                     #Publish cali command event
                     self._ros_pub_cali_cmd.publish(self._cali_event_cmd_msg)
                     node.get_logger().info('Cali command issued from keyboard.')

@@ -115,59 +115,6 @@ CRGB colors_chase[N_COLORS_CHASE] = {
 	CRGB::DarkOrange,
 	CRGB::White};
 
-#define PWM_FREQ_HZ 50 // (20ms / 4096 ticks) == 4.88 us
-#define SERVO_MED 306
-#define SERVO_RANGE 360 // 80 or 380
-#define SERVO_MIN (SERVO_MED - (SERVO_RANGE / 2))
-#define SERVO_MAX (SERVO_MED + (SERVO_RANGE / 2))
-void servo_calibration_task(void *pvParameters)
-{
-	i2c_dev_t dev;
-	uint16_t freq;
-	uint16_t chan = 0;
-	uint16_t val = SERVO_MED;
-	uint16_t dir = 2;
-
-	memset(&dev, 0, sizeof(i2c_dev_t));
-	ESP_ERROR_CHECK(pca9685_init_desc(&dev, ADDR, I2CPORT, SDA_GPIO, SCL_GPIO));
-	ESP_ERROR_CHECK(pca9685_init(&dev));
-	ESP_ERROR_CHECK(pca9685_restart(&dev));
-	ESP_ERROR_CHECK(pca9685_set_pwm_frequency(&dev, PWM_FREQ_HZ));
-	ESP_ERROR_CHECK(pca9685_get_pwm_frequency(&dev, &freq));
-	for (uint32_t i = 0; i < 16; i++)
-	{
-		if (pca9685_set_pwm_value(&dev, i, 0) != ESP_OK)
-			ESP_LOGE("servo_calibration_task", "Could not set PWM value to ch%d", i);
-	}
-	ESP_LOGI(TAG, "Servo calibration initialize to OFF");
-	vTaskDelay(2000 / portTICK_PERIOD_MS);
-	gpio_set_level(RELAY_GPIO, 0);
-
-	bool once = false;
-	while (1)
-	{
-		ESP_LOGI("servo_calibration_task", "CH%d = %-4d", chan, val);
-		if (pca9685_set_pwm_value(&dev, chan, val) != ESP_OK)
-			ESP_LOGE("servo_calibration_task", "Could not set PWM value to ch0");
-		if (val == SERVO_MED)
-		{
-			ESP_LOGI(TAG, "Servo calibration at SERVO_MED");
-			vTaskDelay(4000 / portTICK_PERIOD_MS);
-			if (once)
-				chan = (chan + 1) % 3;
-			once = !once;
-		}
-		val = val + dir;
-		if (val >= SERVO_MAX)
-			dir = -2;
-		else
-		{
-			if (val <= SERVO_MIN)
-				dir = 2;
-		}
-		vTaskDelay(4);
-	}
-}
 
 void blink_task(void *pvParameters)
 {
@@ -221,11 +168,6 @@ extern "C" void app_main(void)
 	ESP_ERROR_CHECK(i2cdev_init());
 	vTaskDelay(1000 / portTICK_PERIOD_MS);
 
-//// #define SERVO_CALIBRATION
-#ifdef SERVO_CALIBRATION
-	ESP_LOGI(TAG, "Calibrate SERVOs");
-	xTaskCreatePinnedToCore(servo_calibration_task, "servo_calibration", configMINIMAL_STACK_SIZE * 3, NULL, 5, NULL, APP_CPU_NUM);
-#else
 	// Initializing i2c_port_0 ...
 	ESP_LOGI(TAG, "Initialize I2C_PORT_0");
 	i2c_config_t conf;
@@ -274,7 +216,7 @@ extern "C" void app_main(void)
 
 	// Initialize OLED
 	ESP_LOGI(TAG, "Testing Kinematics!!");
-	xTaskCreate((TaskFunction_t)&ssd1306_text_task, "ssd1306_display_text", 2048, (void *)"Kinematics!!!   ", 1, NULL);
+	xTaskCreate((TaskFunction_t)&ssd1306_text_task, "ssd1306_display_text", 2048, (void *)"SpotMicro-ESP32 ", 1, NULL);
 	vTaskDelay(500 / portTICK_PERIOD_MS);
 
 	rcl_allocator_t allocator = rcl_get_default_allocator();
@@ -337,5 +279,4 @@ extern "C" void app_main(void)
 			usleep(sleep);
 		}
 	}
-#endif
 }
