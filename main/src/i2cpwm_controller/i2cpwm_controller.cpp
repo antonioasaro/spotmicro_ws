@@ -53,7 +53,7 @@ void i2cpwm_controller_init()
 }
 
 #define SERVO_MED 306
-#define SERVO_RANGE 360 // 80 or 380
+#define SERVO_RANGE 80 // or 380
 #define SERVO_MIN (SERVO_MED - (SERVO_RANGE / 2))
 #define SERVO_MAX (SERVO_MED + (SERVO_RANGE / 2))
 void servo_calibration_task(void *pvParameters)
