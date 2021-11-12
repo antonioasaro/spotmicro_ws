@@ -166,7 +166,7 @@ extern "C" void app_main(void)
 	// Initializing i2cdev
 	ESP_LOGI(TAG, "Initialize i2cdev");
 	ESP_ERROR_CHECK(i2cdev_init());
-	vTaskDelay(1000 / portTICK_PERIOD_MS);
+	vTaskDelay(500 / portTICK_PERIOD_MS);
 
 	// Initializing i2c_port_0 ...
 	ESP_LOGI(TAG, "Initialize I2C_PORT_0");
@@ -210,13 +210,13 @@ extern "C" void app_main(void)
 
 #ifdef UCLIENT_PROFILE_UDP
 	// Start the networking if required
-	vTaskDelay(100 / portTICK_PERIOD_MS);
 	ESP_ERROR_CHECK(uros_network_interface_initialize());
+	vTaskDelay(500 / portTICK_PERIOD_MS);
 #endif // UCLIENT_PROFILE_UDP
 
-	// Initialize OLED
-	ESP_LOGI(TAG, "Testing Kinematics!!");
-	xTaskCreate((TaskFunction_t)&ssd1306_text_task, "ssd1306_display_text", 2048, (void *)"SpotMicro-ESP32 ", 1, NULL);
+	// Initialize uros ...
+	ESP_LOGI(TAG, "Initialize uros!!");
+	xTaskCreate((TaskFunction_t)&ssd1306_text_task, "ssd1306_display_text", 2048, (void *)"Initialize uros!", 1, NULL);
 	vTaskDelay(500 / portTICK_PERIOD_MS);
 
 	rcl_allocator_t allocator = rcl_get_default_allocator();
@@ -244,6 +244,8 @@ extern "C" void app_main(void)
 
 	// Initialize spot micro kinematics object of this class
 	ESP_LOGI(TAG, "Create SpotMicroMotionCmd object");
+	xTaskCreate((TaskFunction_t)&ssd1306_text_task, "ssd1306_display_text", 2048, (void *)"SpotMicro-ESP32 ", 1, NULL);
+	vTaskDelay(500 / portTICK_PERIOD_MS);
 	motion = new SpotMicroMotionCmd(node, executor);
 
 	// Create timer
