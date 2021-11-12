@@ -186,7 +186,7 @@ extern "C" void app_main(void)
 	ssd1306();
 	xTaskCreate((TaskFunction_t)&ssd1306_clear_task, "ssd1306_clear_task", 2048, NULL, 1, NULL);
 	vTaskDelay(500 / portTICK_PERIOD_MS);
-	xTaskCreate((TaskFunction_t)&ssd1306_text_task, "ssd1306_display_text", 2048, (void *)"Initializing ...", 1, NULL);
+	xTaskCreate((TaskFunction_t)&ssd1306_text_task, "ssd1306_display_text", 2048, (void *)"Starting up ... ", 1, NULL);
 	vTaskDelay(500 / portTICK_PERIOD_MS);
 
 //// #define MPU6050_EN
@@ -216,7 +216,7 @@ extern "C" void app_main(void)
 
 	// Initialize uros ...
 	ESP_LOGI(TAG, "Initialize uros!!");
-	xTaskCreate((TaskFunction_t)&ssd1306_text_task, "ssd1306_display_text", 2048, (void *)"Initialize uros!", 1, NULL);
+	xTaskCreate((TaskFunction_t)&ssd1306_text_task, "ssd1306_display_text", 2048, (void *)"Initialize uros ", 1, NULL);
 	vTaskDelay(500 / portTICK_PERIOD_MS);
 
 	rcl_allocator_t allocator = rcl_get_default_allocator();
