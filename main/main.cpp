@@ -198,7 +198,7 @@ extern "C" void app_main(void)
 	vTaskDelay(500 / portTICK_PERIOD_MS);
 #endif
 
-#define WS2812B_EN
+//// #define WS2812B_EN
 #ifdef WS2812B_EN
 	// Start LEDs
 	ESP_LOGI(TAG, "Initialize WS2812B LED strip");

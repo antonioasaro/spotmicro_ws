@@ -53,7 +53,7 @@ void i2cpwm_controller_init()
 }
 
 #define SERVO_MED 306
-#define SERVO_RANGE 80 // or 380
+#define SERVO_RANGE 180 // was 80 // or full = 380
 #define SERVO_MIN (SERVO_MED - (SERVO_RANGE / 2))
 #define SERVO_MAX (SERVO_MED + (SERVO_RANGE / 2))
 void servo_calibration_task(void *pvParameters)
@@ -70,9 +70,9 @@ void servo_calibration_task(void *pvParameters)
         if (val == SERVO_MED)
         {
             ESP_LOGI(TAG, "Servo calibration ch%d at SERVO_MED", chan);
-            vTaskDelay(5000 / portTICK_PERIOD_MS);
+            vTaskDelay(10000 / portTICK_PERIOD_MS);
             if (once)
-                chan = (chan + 1) % 3;
+                chan = (chan + 1) % 2;
             once = !once;
         }
         val = val + dir;
