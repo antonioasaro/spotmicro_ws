@@ -1,0 +1,7 @@
+gos
+so howto.spotmicro_agent
+so howto.spotmicro_keyboard
+
+ros2s
+so howto.idf
+code .

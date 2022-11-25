@@ -72,16 +72,20 @@ void servo_calibration_task(void *pvParameters)
             ESP_LOGI(TAG, "Servo calibration ch%d at SERVO_MED", chan);
             vTaskDelay(10000 / portTICK_PERIOD_MS);
             if (once)
-                chan = (chan + 1) % 2;
+                chan = 0;  // (chan + 1) % 2;
             once = !once;
         }
         val = val + dir;
-        if (val >= SERVO_MAX)
+        if (val >= SERVO_MAX) {
+            ESP_LOGI(TAG, "Servo calibration ch%d at SERVO_MAX", chan);
             dir = -2;
+        }
         else
         {
-            if (val <= SERVO_MIN)
+            if (val <= SERVO_MIN) {
+                ESP_LOGI(TAG, "Servo calibration ch%d at SERVO_MIN", chan);
                 dir = 2;
+            }
         }
         vTaskDelay(5);
     }
