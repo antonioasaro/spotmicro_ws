@@ -155,10 +155,34 @@ class SpotMicroKeyboardControl():
                     node.get_logger().info('Idle command issued from keyboard.')
 
                 elif userInput == 'calibrate':
-                    #Publish cali command event
+                    self.reset_all_motion_commands_to_zero()
                     self._ros_pub_cali_cmd.publish(self._cali_event_cmd_msg)
                     node.get_logger().info('Cali command issued from keyboard.')
+                    while (1):
+                        print('ServoSelect: %2.0f, CenterOffset: %2.0f '\
+                                %(self._vel_cmd_msg.linear.x,self._vel_cmd_msg.linear.y))
+                        userInput = self.getKey()
+                        if userInput == 'u':
+                            self._ros_pub_stand_cmd.publish(self._stand_event_cmd_msg)
+                            node.get_logger().info('Stand command issued from keyboard.')
+                            break
+                        elif userInput not in ('n','+','-'):
+                            print('Key not in valid key commands, try again')
+                            node.get_logger().warn('Invalid keyboard command issued in walk mode: %s', userInput)
+                        else:
+                            if userInput == 'n':
+                                self._vel_cmd_msg.linear.x = self._vel_cmd_msg.linear.x + 1
+                                self._ros_pub_vel_cmd.publish(self._vel_cmd_msg)
+                            elif userInput == '+':
+                                self._vel_cmd_msg.linear.y = self._vel_cmd_msg.linear.y + 1
+                                self._ros_pub_vel_cmd.publish(self._vel_cmd_msg)
+                            
+                            elif userInput == '-':
+                                self._vel_cmd_msg.linear.y = self._vel_cmd_msg.linear.y - 1
+                                self._ros_pub_vel_cmd.publish(self._vel_cmd_msg)
 
+
+                         
                 elif userInput == 'angle_cmd':
                     # Reset all angle commands
                     self.reset_all_angle_commands_to_zero()

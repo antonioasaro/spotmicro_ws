@@ -70,7 +70,7 @@ void servo_calibration_task(void *pvParameters)
         if (val == SERVO_MED)
         {
             ESP_LOGI(TAG, "Servo calibration ch%d at SERVO_MED", chan);
-            vTaskDelay(10000 / portTICK_PERIOD_MS);
+            //// vTaskDelay(10000 / portTICK_PERIOD_MS);
             if (once)
                 chan = 0;  // (chan + 1) % 2;
             once = !once;
@@ -87,7 +87,7 @@ void servo_calibration_task(void *pvParameters)
                 dir = 2;
             }
         }
-        vTaskDelay(5);
+        vTaskDelay(1);
     }
 }
 
