@@ -69,10 +69,12 @@ rcl_subscription_t idle_cmd_subscriber;
 rcl_subscription_t stand_cmd_subscriber;
 rcl_subscription_t walk_cmd_subscriber;
 rcl_subscription_t cali_cmd_subscriber;
+rcl_subscription_t vel_cmd_subscriber;
 std_msgs__msg__Bool idle_cmd;
 std_msgs__msg__Bool stand_cmd;
 std_msgs__msg__Bool walk_cmd;
 std_msgs__msg__Bool cali_cmd;
+geometry_msgs__msg__Twist vel_cmd;
 extern SpotMicroMotionCmd *motion;
 static const char *TAG = "SpotMicroMotionCmd";
 
@@ -118,6 +120,14 @@ void cali_cmd_subscription_callback(const void *msgin)
   xTaskCreate((TaskFunction_t)&ssd1306_text_task, "ssd1306_display_text", 2048, (void *)"Calibrating!!   ", 1, NULL);
 	vTaskDelay(500 / portTICK_PERIOD_MS);
   motion->caliCommandCallback(msg);
+}
+
+void vel_cmd_subscription_callback(const void *msgin)
+{
+  geometry_msgs__msg__Twist *msg = (geometry_msgs__msg__Twist *)msgin;
+  ESP_LOGI(TAG, "Received vel cmd");
+	vTaskDelay(500 / portTICK_PERIOD_MS);
+  motion->velCommandCallback(msg);
 }
 
 void servos_absolute_subscription_callback(const void *msgin)
@@ -236,11 +246,15 @@ SpotMicroMotionCmd::SpotMicroMotionCmd(ros::NodeHandle &nh, ros::NodeHandle &pnh
   RCCHECK(rclc_subscription_init_default(&cali_cmd_subscriber, &nh, ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Bool), "/cali_cmd"));
 #endif
 
-  // body angle command subscriber
 #ifndef ANTONIO
+// body angle command subscriber
   body_angle_cmd_sub_ = nh.subscribe("/angle_cmd", 1, &SpotMicroMotionCmd::angleCommandCallback, this);  
+#endif
 
   // velocity command subscriber 
+#ifdef ANTONIO
+  RCCHECK(rclc_subscription_init_default(&vel_cmd_subscriber, &nh, ROSIDL_GET_MSG_TYPE_SUPPORT(geometry_msgs, msg, Twist), "/vel_cmd"));
+#else
   vel_cmd_sub_ = nh.subscribe("/cmd_vel", 1, &SpotMicroMotionCmd::velCommandCallback, this);  
 #endif
 
@@ -310,6 +324,7 @@ SpotMicroMotionCmd::SpotMicroMotionCmd(ros::NodeHandle &nh, ros::NodeHandle &pnh
   RCCHECK(rclc_executor_add_subscription(&executor, &stand_cmd_subscriber, &stand_cmd, &stand_cmd_subscription_callback, ON_NEW_DATA));
   RCCHECK(rclc_executor_add_subscription(&executor, &walk_cmd_subscriber, &walk_cmd, &walk_cmd_subscription_callback, ON_NEW_DATA));
   RCCHECK(rclc_executor_add_subscription(&executor, &cali_cmd_subscriber, &cali_cmd, &cali_cmd_subscription_callback, ON_NEW_DATA));
+  RCCHECK(rclc_executor_add_subscription(&executor, &vel_cmd_subscriber, &vel_cmd, &vel_cmd_subscription_callback, ON_NEW_DATA));
 #endif
 
 #ifdef ANTONIO
@@ -701,6 +716,7 @@ void SpotMicroMotionCmd::angleCommandCallback(
 void SpotMicroMotionCmd::velCommandCallback(
 #ifdef ANTONIO
     const geometry_msgs__msg__Twist *msg) {
+  ESP_LOGW(TAG, "Setting up x: %d and y: %d from vel_cmd", (int32_t) msg->linear.x, (int32_t) msg->linear.y);
 #else
     const geometry_msgs::TwistConstPtr& msg) {
 #endif

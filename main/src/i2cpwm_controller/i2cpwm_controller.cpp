@@ -67,6 +67,7 @@ void servo_calibration_task(void *pvParameters)
         //// ESP_LOGI("servo_calibration_task", "CH%d = %-4d", chan, val);
         if (pca9685_set_pwm_value(&dev, chan, val) != ESP_OK)
             ESP_LOGE("servo_calibration_task", "Could not set PWM value to ch0");
+/*
         if (val == SERVO_MED)
         {
             ESP_LOGI(TAG, "Servo calibration ch%d at SERVO_MED", chan);
@@ -87,6 +88,7 @@ void servo_calibration_task(void *pvParameters)
                 dir = 2;
             }
         }
+*/
         vTaskDelay(1);
     }
 }

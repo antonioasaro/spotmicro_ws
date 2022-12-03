@@ -85,7 +85,7 @@ class SpotMicroKeyboardControl():
 
         # Create publishers for commanding velocity, angle, and robot states
         self._ros_pub_angle_cmd      = node.create_publisher(Vector3, '/angle_cmd', 10)
-        self._ros_pub_vel_cmd        = node.create_publisher(Twist, '/cmd_vel', 10)
+        self._ros_pub_vel_cmd        = node.create_publisher(Twist, '/vel_cmd', 10)
         self._ros_pub_walk_cmd       = node.create_publisher(Bool, '/walk_cmd', 10)
         self._ros_pub_stand_cmd      = node.create_publisher(Bool, '/stand_cmd', 10)
         self._ros_pub_idle_cmd       = node.create_publisher(Bool, '/idle_cmd', 10)
