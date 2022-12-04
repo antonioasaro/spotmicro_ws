@@ -155,7 +155,8 @@ class SpotMicroKeyboardControl():
                     node.get_logger().info('Idle command issued from keyboard.')
 
                 elif userInput == 'calibrate':
-                    self.reset_all_motion_commands_to_zero()
+                    self._vel_cmd_msg.linear.x = 0.0
+                    self._vel_cmd_msg.linear.y = 0.0
                     self._ros_pub_cali_cmd.publish(self._cali_event_cmd_msg)
                     node.get_logger().info('Cali command issued from keyboard.')
                     while (1):
@@ -163,22 +164,22 @@ class SpotMicroKeyboardControl():
                                 %(self._vel_cmd_msg.linear.x,self._vel_cmd_msg.linear.y))
                         userInput = self.getKey()
                         if userInput == 'u':
-                            self._ros_pub_stand_cmd.publish(self._stand_event_cmd_msg)
-                            node.get_logger().info('Stand command issued from keyboard.')
+                            self._ros_pub_stand_cmd.publish(self._idle_event_cmd_msg)
+                            node.get_logger().info('Idle command issued from keyboard.')
                             break
                         elif userInput not in ('n','+','-'):
                             print('Key not in valid key commands, try again')
-                            node.get_logger().warn('Invalid keyboard command issued in walk mode: %s', userInput)
+                            node.get_logger().warn('Invalid keyboard command issued in walk mode') # : %s', userInput)
                         else:
                             if userInput == 'n':
-                                self._vel_cmd_msg.linear.x = self._vel_cmd_msg.linear.x + 1
+                                self._vel_cmd_msg.linear.x = (self._vel_cmd_msg.linear.x + 1) % 12
                                 self._ros_pub_vel_cmd.publish(self._vel_cmd_msg)
                             elif userInput == '+':
-                                self._vel_cmd_msg.linear.y = self._vel_cmd_msg.linear.y + 1
+                                self._vel_cmd_msg.linear.y = self._vel_cmd_msg.linear.y + 3
                                 self._ros_pub_vel_cmd.publish(self._vel_cmd_msg)
                             
                             elif userInput == '-':
-                                self._vel_cmd_msg.linear.y = self._vel_cmd_msg.linear.y - 1
+                                self._vel_cmd_msg.linear.y = self._vel_cmd_msg.linear.y - 3
                                 self._ros_pub_vel_cmd.publish(self._vel_cmd_msg)
 
 
@@ -253,7 +254,7 @@ class SpotMicroKeyboardControl():
 
                         elif userInput not in ('w','a','s','d','q','e','u','f'):
                             print('Key not in valid key commands, try again')
-                            node.get_logger().warn('Invalid keyboard command issued in walk mode: %s', userInput)
+                            node.get_logger().warn('Invalid keyboard command issued in walk mode') # : %s', userInput)
                         else:
                             if userInput == 'w':
                                 self._vel_cmd_msg.linear.x = self._vel_cmd_msg.linear.x + speed_inc

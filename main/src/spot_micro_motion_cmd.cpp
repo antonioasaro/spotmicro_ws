@@ -716,7 +716,7 @@ void SpotMicroMotionCmd::angleCommandCallback(
 void SpotMicroMotionCmd::velCommandCallback(
 #ifdef ANTONIO
     const geometry_msgs__msg__Twist *msg) {
-  ESP_LOGW(TAG, "Setting up x: %d and y: %d from vel_cmd", (int32_t) msg->linear.x, (int32_t) msg->linear.y);
+  ESP_LOGW(TAG, "Calibrate servo: %d with offset: %d", (int32_t) msg->linear.x, (int32_t) msg->linear.y);
 #else
     const geometry_msgs::TwistConstPtr& msg) {
 #endif

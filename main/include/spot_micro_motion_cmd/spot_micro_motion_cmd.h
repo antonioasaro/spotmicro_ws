@@ -4,7 +4,7 @@
 
 #define ANTONIO
 #ifdef ANTONIO
-#define SPOT_MICRO_MOTION_CMD_SUBSCRIBERS 8
+#define SPOT_MICRO_MOTION_CMD_SUBSCRIBERS 7
 #include "std_msgs/msg/bool.h"
 #include "std_msgs/msg/string.h"
 #include "geometry_msgs/msg/vector3.h"

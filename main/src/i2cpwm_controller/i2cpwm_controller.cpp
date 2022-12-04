@@ -16,6 +16,8 @@
 
 #include "i2cpwm_board/msg/servo.h"
 #include "i2cpwm_controller/i2cpwm_controller.h"
+#include "spot_micro_motion_cmd.h"
+extern SpotMicroMotionCmd *motion;
 
 #define ADDR PCA9685_ADDR_BASE
 #define SDA_GPIO gpio_num_t(4)
@@ -60,11 +62,11 @@ void servo_calibration_task(void *pvParameters)
 {
     uint16_t chan = 0;
     uint16_t val = SERVO_MED;
-    uint16_t dir = 2;
-    bool once = false;
+    //// uint16_t dir = 2;
+    //// bool once = false;
     while (calibrating)
     {
-        //// ESP_LOGI("servo_calibration_task", "CH%d = %-4d", chan, val);
+        ESP_LOGI("servo_calibration_task", "CH%d = %-4d", 0, _servo_configs[0].center);
         if (pca9685_set_pwm_value(&dev, chan, val) != ESP_OK)
             ESP_LOGE("servo_calibration_task", "Could not set PWM value to ch0");
 /*
@@ -89,7 +91,7 @@ void servo_calibration_task(void *pvParameters)
             }
         }
 */
-        vTaskDelay(1);
+        vTaskDelay(500);
     }
 }
 
@@ -122,8 +124,8 @@ void i2cpwm_controller_config_servo(int servo, int center, int range, int direct
     _servo_configs[servo - 1].range = range;
     _servo_configs[servo - 1].direction = direction;
     _servo_configs[servo - 1].mode_pos = POSITION_UNDEFINED;
-    if (servo == 1)
-        ESP_LOGI(TAG, "Servo #%d configured with center=%d, range=%d, and direction=%d", servo, center, range, direction);
+    //// if (servo == 1)
+    ////    ESP_LOGI(TAG, "Servo #%d configured with center=%d, range=%d, and direction=%d", servo, center, range, direction);
 }
 
 void i2cpwm_controller_servos_absolute(i2cpwm_board__msg__ServoArray *msg)
