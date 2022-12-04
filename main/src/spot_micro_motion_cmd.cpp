@@ -124,10 +124,16 @@ void cali_cmd_subscription_callback(const void *msgin)
   motion->caliCommandCallback(msg);
 }
 
+char servo_info[32];
 void vel_cmd_subscription_callback(const void *msgin)
 {
   geometry_msgs__msg__Twist *msg = (geometry_msgs__msg__Twist *)msgin;
   ESP_LOGI(TAG, "Received vel cmd");
+  sprintf(servo_info, "                               ");
+  xTaskCreate((TaskFunction_t)&ssd1306_text_task, "ssd1306_display_text", 2048, (void *)servo_info, 1, NULL);
+	vTaskDelay(100 / portTICK_PERIOD_MS);
+  sprintf(servo_info, "servo:%d,off:%d", (int) msg->linear.x, (int) msg->linear.y);
+  xTaskCreate((TaskFunction_t)&ssd1306_text_task, "ssd1306_display_text", 2048, (void *)servo_info, 1, NULL);
 	vTaskDelay(500 / portTICK_PERIOD_MS);
   motion->velCommandCallback(msg);
 }

@@ -173,6 +173,7 @@ class SpotMicroKeyboardControl():
                         else:
                             if userInput == 'n':
                                 self._vel_cmd_msg.linear.x = (self._vel_cmd_msg.linear.x + 1) % 12
+                                self._vel_cmd_msg.linear.y = 0.0
                                 self._ros_pub_vel_cmd.publish(self._vel_cmd_msg)
                             elif userInput == '+':
                                 self._vel_cmd_msg.linear.y = self._vel_cmd_msg.linear.y + 3
