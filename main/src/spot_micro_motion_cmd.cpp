@@ -77,6 +77,8 @@ std_msgs__msg__Bool cali_cmd;
 geometry_msgs__msg__Twist vel_cmd;
 extern SpotMicroMotionCmd *motion;
 static const char *TAG = "SpotMicroMotionCmd";
+float servo_cali_number = 0; 
+float servo_cali_offset = 0;
 
 #define STRING_BUFFER_LEN 256
 rcl_publisher_t servos_absolute_publisher;
@@ -134,7 +136,6 @@ void servos_absolute_subscription_callback(const void *msgin)
 {
 
   i2cpwm_board__msg__ServoArray *msg = (i2cpwm_board__msg__ServoArray *)msgin;
-  //// printf("Received servos_absolute_cmd\n");
   i2cpwm_controller_servos_absolute(msg);
 }
 
@@ -697,7 +698,11 @@ void SpotMicroMotionCmd::walkCommandCallback(
 #ifdef ANTONIO
 void SpotMicroMotionCmd::caliCommandCallback(
     const std_msgs__msg__Bool *msg) {
-  if (msg->data == true) {cmd_.cali_cmd_ = true;}
+  if (msg->data == true) {
+    cmd_.cali_cmd_ = true;
+    servo_cali_number = 0;
+    servo_cali_offset = 0;
+  }
 }
 #endif
 
@@ -716,7 +721,9 @@ void SpotMicroMotionCmd::angleCommandCallback(
 void SpotMicroMotionCmd::velCommandCallback(
 #ifdef ANTONIO
     const geometry_msgs__msg__Twist *msg) {
-  ESP_LOGW(TAG, "Calibrate servo: %d with offset: %d", (int32_t) msg->linear.x, (int32_t) msg->linear.y);
+  //// ESP_LOGW(TAG, "Calibrate servo: %d with offset: %d", (int32_t) msg->linear.x, (int32_t) msg->linear.y);
+  servo_cali_number = msg->linear.x;
+  servo_cali_offset = msg->linear.y;
 #else
     const geometry_msgs::TwistConstPtr& msg) {
 #endif

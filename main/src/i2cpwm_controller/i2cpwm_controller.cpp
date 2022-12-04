@@ -16,8 +16,8 @@
 
 #include "i2cpwm_board/msg/servo.h"
 #include "i2cpwm_controller/i2cpwm_controller.h"
-#include "spot_micro_motion_cmd.h"
-extern SpotMicroMotionCmd *motion;
+extern float servo_cali_number; 
+extern float servo_cali_offset;
 
 #define ADDR PCA9685_ADDR_BASE
 #define SDA_GPIO gpio_num_t(4)
@@ -60,37 +60,15 @@ void i2cpwm_controller_init()
 #define SERVO_MAX (SERVO_MED + (SERVO_RANGE / 2))
 void servo_calibration_task(void *pvParameters)
 {
-    uint16_t chan = 0;
-    uint16_t val = SERVO_MED;
-    //// uint16_t dir = 2;
-    //// bool once = false;
+    uint16_t channel = 0;
+    uint16_t offset = SERVO_MED;
     while (calibrating)
     {
-        ESP_LOGI("servo_calibration_task", "CH%d = %-4d", 0, _servo_configs[0].center);
-        if (pca9685_set_pwm_value(&dev, chan, val) != ESP_OK)
+        channel = (uint16_t) servo_cali_number;
+        offset = _servo_configs[0].center + servo_cali_offset;
+        ESP_LOGW("servo_calibration_task", "servo# %d with offset %-4d", channel, offset);
+        if (pca9685_set_pwm_value(&dev, channel, offset) != ESP_OK)
             ESP_LOGE("servo_calibration_task", "Could not set PWM value to ch0");
-/*
-        if (val == SERVO_MED)
-        {
-            ESP_LOGI(TAG, "Servo calibration ch%d at SERVO_MED", chan);
-            //// vTaskDelay(10000 / portTICK_PERIOD_MS);
-            if (once)
-                chan = 0;  // (chan + 1) % 2;
-            once = !once;
-        }
-        val = val + dir;
-        if (val >= SERVO_MAX) {
-            ESP_LOGI(TAG, "Servo calibration ch%d at SERVO_MAX", chan);
-            dir = -2;
-        }
-        else
-        {
-            if (val <= SERVO_MIN) {
-                ESP_LOGI(TAG, "Servo calibration ch%d at SERVO_MIN", chan);
-                dir = 2;
-            }
-        }
-*/
         vTaskDelay(500);
     }
 }
