@@ -54,20 +54,19 @@ void i2cpwm_controller_init()
     gpio_set_level(RELAY_GPIO, 0);
 }
 
-#define SERVO_MED 306
-#define SERVO_RANGE 180 // was 80 // or full = 380
-#define SERVO_MIN (SERVO_MED - (SERVO_RANGE / 2))
-#define SERVO_MAX (SERVO_MED + (SERVO_RANGE / 2))
+
 void servo_calibration_task(void *pvParameters)
 {
     uint16_t channel = 0;
-    uint16_t offset = SERVO_MED;
+    uint16_t offset = 0;
+    uint16_t center = 0;
     while (calibrating)
     {
         channel = (uint16_t) servo_cali_number;
-        offset = _servo_configs[0].center + servo_cali_offset;
-        ESP_LOGW("servo_calibration_task", "servo# %d with offset %-4d", channel, offset);
-        if (pca9685_set_pwm_value(&dev, channel, offset) != ESP_OK)
+        offset = (uint16_t) servo_cali_offset;
+        center = _servo_configs[channel].center + offset;
+        ESP_LOGW("servo_calibration_task", "servo# %d with center of %-4d", channel, center);
+        if (pca9685_set_pwm_value(&dev, channel, center) != ESP_OK)
             ESP_LOGE("servo_calibration_task", "Could not set PWM value to ch0");
         vTaskDelay(500);
     }
