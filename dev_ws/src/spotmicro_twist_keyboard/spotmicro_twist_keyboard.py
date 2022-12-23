@@ -167,12 +167,16 @@ class SpotMicroKeyboardControl():
                             self._ros_pub_stand_cmd.publish(self._idle_event_cmd_msg)
                             node.get_logger().info('Idle command issued from keyboard.')
                             break
-                        elif userInput not in ('n','+','-'):
+                        elif userInput not in ('n','b','+','-'):
                             print('Key not in valid key commands, try again')
                             node.get_logger().warn('Invalid keyboard command issued in walk mode') # : %s', userInput)
                         else:
                             if userInput == 'n':
                                 self._vel_cmd_msg.linear.x = (self._vel_cmd_msg.linear.x + 1) % 12
+                                self._vel_cmd_msg.linear.y = 0.0
+                                self._ros_pub_vel_cmd.publish(self._vel_cmd_msg)
+                            elif userInput == 'b':
+                                self._vel_cmd_msg.linear.x = (self._vel_cmd_msg.linear.x - 1) % 12
                                 self._vel_cmd_msg.linear.y = 0.0
                                 self._ros_pub_vel_cmd.publish(self._vel_cmd_msg)
                             elif userInput == '+':

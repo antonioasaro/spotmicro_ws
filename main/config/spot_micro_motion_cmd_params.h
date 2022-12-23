@@ -34,21 +34,18 @@ smnc_.dt = 0.02;
 smnc_.publish_odom = true;
 smnc_.debug_mode = false;
 smnc_.plot_mode = false;
-smnc_.servo_config["RF_3"] = {{"num", 1},  {"center", 310}, {"range", 320}, {"direction",  1},  {"center_angle_deg",  88.2}};
-smnc_.servo_config["RF_2"] = {{"num", 2},  {"center", 320}, {"range", 320}, {"direction",  1},  {"center_angle_deg", -27.6}};
-smnc_.servo_config["RF_1"] = {{"num", 3},  {"center", 290}, {"range", 320}, {"direction", -1},  {"center_angle_deg",  -5.4}};
-
-smnc_.servo_config["RB_3"] = {{"num", 4},  {"center", 320}, {"range", 320}, {"direction",  1},  {"center_angle_deg",  85.8}};
-smnc_.servo_config["RB_2"] = {{"num", 5},  {"center", 330}, {"range", 320}, {"direction",  1},  {"center_angle_deg", -35.4}};
-smnc_.servo_config["RB_1"] = {{"num", 6},  {"center", 310}, {"range", 320}, {"direction",  1},  {"center_angle_deg",  -4.4}};
-
-smnc_.servo_config["LB_3"] = {{"num", 7},  {"center", 320}, {"range", 320}, {"direction",  1},  {"center_angle_deg", -73.9}};
-smnc_.servo_config["LB_2"] = {{"num", 8},  {"center", 240}, {"range", 320}, {"direction",  1},  {"center_angle_deg",  38.7}};
-smnc_.servo_config["LB_1"] = {{"num", 9},  {"center", 310}, {"range", 320}, {"direction", -1},  {"center_angle_deg",  -0.4}};
-
-smnc_.servo_config["LF_3"] = {{"num", 10}, {"center", 320}, {"range", 320}, {"direction",  1},  {"center_angle_deg", -82.8}};
-smnc_.servo_config["LF_2"] = {{"num", 11}, {"center", 280}, {"range", 320}, {"direction",  1},  {"center_angle_deg",  38.6}};
-smnc_.servo_config["LF_1"] = {{"num", 12}, {"center", 290}, {"range", 320}, {"direction",  1},  {"center_angle_deg",  -7.6}};
+smnc_.servo_config["RF_3"] = {{"num", 1},  {"center", 306}, {"range", 247}, {"direction",  1},  {"center_angle_deg",  77.3}};
+smnc_.servo_config["RF_2"] = {{"num", 2},  {"center", 306}, {"range", 264}, {"direction",  1},  {"center_angle_deg", -20.0}};
+smnc_.servo_config["RF_1"] = {{"num", 3},  {"center", 206}, {"range", 154}, {"direction", -1},  {"center_angle_deg", -26.8}};
+smnc_.servo_config["RB_3"] = {{"num", 4},  {"center", 306}, {"range", 264}, {"direction",  1},  {"center_angle_deg",  60.6}};
+smnc_.servo_config["RB_2"] = {{"num", 5},  {"center", 306}, {"range", 247}, {"direction",  1},  {"center_angle_deg", -30.0}};
+smnc_.servo_config["RB_1"] = {{"num", 6},  {"center", 306}, {"range", 187}, {"direction",  1},  {"center_angle_deg", -14.1}};
+smnc_.servo_config["LB_3"] = {{"num", 7},  {"center", 306}, {"range", 253}, {"direction",  1},  {"center_angle_deg", -54.1}};
+smnc_.servo_config["LB_2"] = {{"num", 8},  {"center", 306}, {"range", 247}, {"direction",  1},  {"center_angle_deg",  58.0}};
+smnc_.servo_config["LB_1"] = {{"num", 9},  {"center", 306}, {"range", 242}, {"direction", -1},  {"center_angle_deg",   2.7}};
+smnc_.servo_config["LF_3"] = {{"num", 10}, {"center", 306}, {"range", 247}, {"direction",  1},  {"center_angle_deg", -73.3}};
+smnc_.servo_config["LF_2"] = {{"num", 11}, {"center", 306}, {"range", 236}, {"direction",  1},  {"center_angle_deg",  41.2}};
+smnc_.servo_config["LF_1"] = {{"num", 12}, {"center", 306}, {"range", 198}, {"direction",  1},  {"center_angle_deg",   5.8}};
 smnc_.rb_contact_phases.push_back(1);
 smnc_.rb_contact_phases.push_back(0);
 smnc_.rb_contact_phases.push_back(1);
