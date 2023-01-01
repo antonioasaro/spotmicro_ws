@@ -39,6 +39,14 @@ Keyboard commands for body motion
 
   anything else : Prompt again for command
 
+Keyboard commands for calibration 
+---------------------------
+
+  n: Next servo
+  b: Previous servo
+  +: Increment servo by 3
+  -: Decrement servo by 3
+  u: Quit calibrate
 
 CTRL-C to quit
 """
