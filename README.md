@@ -12,7 +12,7 @@ https://github.com/micro-ROS/micro_ros_espidf_component
 ## My version ...
 https://youtu.be/lUxBdqUD2ac
 
-[alt text](https://github.com/antonioasaro/spotmicro_ws/blob/main/SpotMicro_Standing.jpg?raw=true)
+![alt text](https://github.com/antonioasaro/spotmicro_ws/blob/main/SpotMicro_Standing.jpg?raw=true)
 
 
 
