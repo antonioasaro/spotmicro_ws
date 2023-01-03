@@ -11,7 +11,7 @@ https://docs.ros.org/en/foxy/Tutorials/Custom-ROS2-Interfaces.html
 https://github.com/micro-ROS/micro_ros_espidf_component  
 
 ### Hardware
-https://github.com/michaelkubina/SpotMicroESP32
+https://github.com/michaelkubina/SpotMicroESP32  
 https://www.thingiverse.com/thing:4937631
 
 ## My version ...
