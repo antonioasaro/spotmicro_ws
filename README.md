@@ -14,8 +14,7 @@ https://github.com/micro-ROS/micro_ros_espidf_component
 https://github.com/michaelkubina/SpotMicroESP32  
 https://www.thingiverse.com/thing:4937631
 
-
-## My version ...
+## My version - see YouTube video ...
 https://youtu.be/lUxBdqUD2ac
 
 ![alt text](https://github.com/antonioasaro/spotmicro_ws/blob/main/SpotMicro_Standing.jpg?raw=true)
